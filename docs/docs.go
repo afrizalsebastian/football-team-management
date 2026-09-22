@@ -43,6 +43,33 @@ const docTemplate = `{
             }
         },
         "/api/v1/teams": {
+            "get": {
+                "description": "Get List Team",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Teams"
+                ],
+                "summary": "Get List team",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.WebResponse-array_dto_GetListTeamItem"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.WebResponse-any"
+                        }
+                    }
+                }
+            },
             "post": {
                 "description": "Create a new team",
                 "consumes": [
@@ -131,6 +158,38 @@ const docTemplate = `{
                 }
             }
         },
+        "api.WebResponse-array_dto_GetListTeamItem": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.GetListTeamItem"
+                    }
+                },
+                "error_message": {
+                    "type": "string"
+                },
+                "errors_detail": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api.ErrorsDetail"
+                    }
+                },
+                "http_code": {
+                    "type": "integer"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "message_code": {
+                    "type": "integer"
+                },
+                "message_id": {
+                    "type": "string"
+                }
+            }
+        },
         "api.WebResponse-dto_CreateTeamResponse": {
             "type": "object",
             "properties": {
@@ -196,6 +255,23 @@ const docTemplate = `{
                 "city": {
                     "type": "string"
                 },
+                "founded_year": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "logo": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.GetListTeamItem": {
+            "type": "object",
+            "properties": {
                 "founded_year": {
                     "type": "string"
                 },

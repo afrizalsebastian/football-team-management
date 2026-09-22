@@ -39,3 +39,41 @@ func (q *Queries) CreateTeam(ctx context.Context, arg *CreateTeamParams) (pgtype
 	err := row.Scan(&id)
 	return id, err
 }
+
+const getListTeams = `-- name: GetListTeams :many
+SELECT id, name, logo, founded_year
+FROM teams
+ORDER BY founded_year DESC
+`
+
+type GetListTeamsRow struct {
+	ID          pgtype.UUID `json:"id"`
+	Name        string      `json:"name"`
+	Logo        pgtype.Text `json:"logo"`
+	FoundedYear pgtype.Text `json:"founded_year"`
+}
+
+func (q *Queries) GetListTeams(ctx context.Context) ([]*GetListTeamsRow, error) {
+	rows, err := q.db.Query(ctx, getListTeams)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []*GetListTeamsRow{}
+	for rows.Next() {
+		var i GetListTeamsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Logo,
+			&i.FoundedYear,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}

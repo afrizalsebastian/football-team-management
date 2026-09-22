@@ -9,5 +9,6 @@ func SetupTeamsRoutes(router *gin.RouterGroup, server *server.HttpServer) {
 	helloGroup := router.Group("/teams")
 	{
 		helloGroup.POST("/", server.PostCreateTeam)
+		helloGroup.GET("/", server.GetListTeam)
 	}
 }

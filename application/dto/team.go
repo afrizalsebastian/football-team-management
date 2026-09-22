@@ -16,3 +16,10 @@ type CreateTeamResponse struct {
 	Address     string `json:"address"`
 	City        string `json:"city"`
 }
+
+type GetListTeamItem struct {
+	Id          string `json:"id"`
+	Name        string `json:"name"`
+	Logo        string `json:"logo"`
+	FoundedYear string `json:"founded_year"`
+}

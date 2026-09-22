@@ -40,3 +40,12 @@ func (s *HttpServer) PostCreateTeam(c *gin.Context) {
 	resp := s.TeamsController.CreateTeam(c)
 	api.WriteJSONResponse(c, resp.HttpCode, resp)
 }
+
+func (s *HttpServer) GetListTeam(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 30*time.Second)
+	defer cancel()
+
+	c.Request = c.Request.WithContext(ctx)
+	resp := s.TeamsController.GetListTeam(c)
+	api.WriteJSONResponse(c, resp.HttpCode, resp)
+}

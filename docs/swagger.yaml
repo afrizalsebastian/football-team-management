@@ -26,6 +26,27 @@ definitions:
       message_id:
         type: string
     type: object
+  api.WebResponse-array_dto_GetListTeamItem:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/dto.GetListTeamItem'
+        type: array
+      error_message:
+        type: string
+      errors_detail:
+        items:
+          $ref: '#/definitions/api.ErrorsDetail'
+        type: array
+      http_code:
+        type: integer
+      message:
+        type: string
+      message_code:
+        type: integer
+      message_id:
+        type: string
+    type: object
   api.WebResponse-dto_CreateTeamResponse:
     properties:
       data:
@@ -79,6 +100,17 @@ definitions:
       name:
         type: string
     type: object
+  dto.GetListTeamItem:
+    properties:
+      founded_year:
+        type: string
+      id:
+        type: string
+      logo:
+        type: string
+      name:
+        type: string
+    type: object
 host: localhost:8080
 info:
   contact:
@@ -105,6 +137,24 @@ paths:
       tags:
       - Example
   /api/v1/teams:
+    get:
+      consumes:
+      - application/json
+      description: Get List Team
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.WebResponse-array_dto_GetListTeamItem'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.WebResponse-any'
+      summary: Get List team
+      tags:
+      - Teams
     post:
       consumes:
       - application/json

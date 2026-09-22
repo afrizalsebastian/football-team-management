@@ -12,6 +12,7 @@ import (
 
 type Querier interface {
 	CreateTeam(ctx context.Context, arg *CreateTeamParams) (pgtype.UUID, error)
+	GetListTeams(ctx context.Context) ([]*GetListTeamsRow, error)
 }
 
 var _ Querier = (*Queries)(nil)

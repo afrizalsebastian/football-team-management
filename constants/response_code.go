@@ -34,9 +34,10 @@ var (
 	SuccessHello = registerResponseCode("Success -- Hello from App", 200999, http.StatusOK)
 
 	// 2XX
-	SuccessDefault = registerResponseCode("Success", 200000, http.StatusOK)
-	CreatedDefault = registerResponseCode("Success", 201000, http.StatusCreated)
-	AcceptDefault  = registerResponseCode("Accpeted", 202000, http.StatusAccepted)
+	SuccessDefault        = registerResponseCode("Success", 200000, http.StatusOK)
+	SuccesssWithEmptyList = registerResponseCode("Success with empty list data", 200001, http.StatusOK)
+	CreatedDefault        = registerResponseCode("Success", 201000, http.StatusCreated)
+	AcceptDefault         = registerResponseCode("Accpeted", 202000, http.StatusAccepted)
 
 	// 4XX
 	BadRequestDefault = registerResponseCode("Bad request", 400000, http.StatusBadRequest)

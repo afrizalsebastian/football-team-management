@@ -14,6 +14,7 @@ import (
 
 type ITeamsService interface {
 	CreateTeam(ctx context.Context, request *dto.CreateTeamRequest) api.WebResponse[*dto.CreateTeamResponse]
+	GetListTeam(ctx context.Context) api.WebResponse[[]dto.GetListTeamItem]
 }
 
 type teamsService struct {
@@ -39,7 +40,7 @@ func (s *teamsService) CreateTeam(ctx context.Context, request *dto.CreateTeamRe
 	}
 
 	if err := s.teamsRepository.CreateTeam(ctx, team); err != nil {
-		l.WithContext(ctx).Error("[CreateTeam].service: Started").Attr("error", err).Msg()
+		l.WithContext(ctx).Error("error when create team").Attr("error", err).Msg()
 		return api.ErrorResponse[*dto.CreateTeamResponse](
 			ctx,
 			constants.InternalServerError.GetMessage(),
@@ -58,11 +59,60 @@ func (s *teamsService) CreateTeam(ctx context.Context, request *dto.CreateTeamRe
 		City:        helper.GetStringPtrValue(team.City),
 	}
 
+	l.WithContext(ctx).Debug("[CreateTeam].service: Completed").Msg()
 	return api.SuccessResponse(
 		ctx,
 		constants.CreatedDefault.GetMessage(),
 		constants.CreatedDefault.GetCode(),
 		constants.CreatedDefault.GetHttpCode(),
+		response,
+	)
+}
+
+func (s *teamsService) GetListTeam(ctx context.Context) api.WebResponse[[]dto.GetListTeamItem] {
+	l := logger.LoggerNew()
+
+	l.WithContext(ctx).Debug("[GetListTeam].service: Started").Msg()
+
+	teams, err := s.teamsRepository.GetListTeam(ctx)
+	if err != nil {
+		l.WithContext(ctx).Error("error when create team").Attr("error", err).Msg()
+		return api.ErrorResponse[[]dto.GetListTeamItem](
+			ctx,
+			constants.InternalServerError.GetMessage(),
+			constants.InternalServerError.GetCode(),
+			constants.InternalServerError.GetHttpCode(),
+			nil,
+		)
+	}
+
+	if len(teams) == 0 {
+		l.WithContext(ctx).Debug("empty teams data").Msg()
+		return api.SuccessResponse[[]dto.GetListTeamItem](
+			ctx,
+			constants.SuccesssWithEmptyList.GetMessage(),
+			constants.SuccesssWithEmptyList.GetCode(),
+			constants.SuccesssWithEmptyList.GetHttpCode(),
+			nil,
+		)
+	}
+
+	response := make([]dto.GetListTeamItem, 0)
+	for _, t := range teams {
+		response = append(response, dto.GetListTeamItem{
+			Id:          t.Id,
+			Name:        helper.GetStringPtrValue(t.Name),
+			Logo:        helper.GetStringPtrValue(t.Logo),
+			FoundedYear: helper.GetStringPtrValue(t.FoundedYear),
+		})
+	}
+
+	l.WithContext(ctx).Debug("[CreateTeam].service: Completed").Msg()
+	return api.SuccessResponse(
+		ctx,
+		constants.SuccessDefault.GetMessage(),
+		constants.SuccessDefault.GetCode(),
+		constants.SuccessDefault.GetHttpCode(),
 		response,
 	)
 }

@@ -12,6 +12,7 @@ import (
 
 type ITeamsController interface {
 	CreateTeam(g *gin.Context) api.WebResponse[*dto.CreateTeamResponse]
+	GetListTeam(g *gin.Context) api.WebResponse[[]dto.GetListTeamItem]
 }
 
 type teamsController struct {
@@ -40,7 +41,7 @@ func (c *teamsController) CreateTeam(g *gin.Context) api.WebResponse[*dto.Create
 	l := logger.LoggerNew()
 	ctx := g.Request.Context()
 
-	l.WithContext(ctx).Debug("CreateTeam").Msg()
+	l.WithContext(ctx).Debug("[CreateTeam].ctrl: Started").Msg()
 
 	var request dto.CreateTeamRequest
 	if err := g.ShouldBindBodyWithJSON(&request); err != nil {
@@ -66,4 +67,22 @@ func (c *teamsController) CreateTeam(g *gin.Context) api.WebResponse[*dto.Create
 	}
 
 	return c.teamsService.CreateTeam(ctx, &request)
+}
+
+// CreateTeam
+//
+//	@Summary		Get List team
+//	@Description	Get List Team
+//	@Tags			Teams
+//	@Accept			json
+//	@Produce		json
+//	@Success		200	{object}	api.WebResponse[[]dto.GetListTeamItem]
+//	@Failure		500	{object}	api.WebResponse[any]
+//	@Router			/api/v1/teams [get]
+func (c *teamsController) GetListTeam(g *gin.Context) api.WebResponse[[]dto.GetListTeamItem] {
+	l := logger.LoggerNew()
+	ctx := g.Request.Context()
+
+	l.WithContext(ctx).Debug("[GetListTeam].ctrl: Started").Msg()
+	return c.teamsService.GetListTeam(ctx)
 }
