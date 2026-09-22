@@ -1,0 +1,5 @@
+DROP INDEX IF EXISTS uq_players_team_jersey;
+DROP TABLE IF EXISTS players;
+DROP TABLE IF EXISTS teams;
+DROP TYPE IF EXISTS player_position;
+DROP EXTENSION IF EXISTS pgcrypto;

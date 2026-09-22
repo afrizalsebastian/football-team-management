@@ -1,0 +1,82 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "API Spec for footbal team management",
+        "title": "API Football Team Management",
+        "termsOfService": "http://swagger.io/terms/",
+        "contact": {
+            "name": "afrizalsebastian",
+            "email": "sebastiangurning@gmail.com"
+        },
+        "version": "1.0"
+    },
+    "host": "localhost:8080",
+    "paths": {
+        "/api/v1/hello": {
+            "get": {
+                "description": "Example API",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Example"
+                ],
+                "summary": "Example API -- Hello",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.WebResponse-any"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "api.ErrorsDetail": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "field": {
+                    "type": "string"
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.WebResponse-any": {
+            "type": "object",
+            "properties": {
+                "data": {},
+                "error_message": {
+                    "type": "string"
+                },
+                "errors_detail": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api.ErrorsDetail"
+                    }
+                },
+                "http_code": {
+                    "type": "integer"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "message_code": {
+                    "type": "integer"
+                },
+                "message_id": {
+                    "type": "string"
+                }
+            }
+        }
+    }
+}

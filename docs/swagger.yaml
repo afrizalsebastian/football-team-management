@@ -1,0 +1,54 @@
+definitions:
+  api.ErrorsDetail:
+    properties:
+      code:
+        type: integer
+      field:
+        type: string
+      message:
+        type: string
+    type: object
+  api.WebResponse-any:
+    properties:
+      data: {}
+      error_message:
+        type: string
+      errors_detail:
+        items:
+          $ref: '#/definitions/api.ErrorsDetail'
+        type: array
+      http_code:
+        type: integer
+      message:
+        type: string
+      message_code:
+        type: integer
+      message_id:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: sebastiangurning@gmail.com
+    name: afrizalsebastian
+  description: API Spec for footbal team management
+  termsOfService: http://swagger.io/terms/
+  title: API Football Team Management
+  version: "1.0"
+paths:
+  /api/v1/hello:
+    get:
+      consumes:
+      - application/json
+      description: Example API
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.WebResponse-any'
+      summary: Example API -- Hello
+      tags:
+      - Example
+swagger: "2.0"
