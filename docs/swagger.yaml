@@ -184,4 +184,33 @@ paths:
       summary: Create Team
       tags:
       - Teams
+  /api/v1/teams/{teamId}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete team (soft-delete)
+      parameters:
+      - description: Team ID
+        in: path
+        name: teamId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Accepted
+          schema:
+            $ref: '#/definitions/api.WebResponse-any'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.WebResponse-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.WebResponse-any'
+      summary: Delete team (soft-delete)
+      tags:
+      - Teams
 swagger: "2.0"

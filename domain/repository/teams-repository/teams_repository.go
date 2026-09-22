@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/afrizalsebastian/football-team-management/application/helper"
+	"github.com/afrizalsebastian/football-team-management/constants"
 	"github.com/afrizalsebastian/football-team-management/domain/dao"
 	teamsdb "github.com/afrizalsebastian/football-team-management/domain/repository/teams-repository/db"
 	"github.com/afrizalsebastian/football-team-management/module/logger"
@@ -14,6 +15,7 @@ import (
 type ITeamsRepository interface {
 	CreateTeam(ctx context.Context, team *dao.Teams) error
 	GetListTeam(ctx context.Context) ([]dao.Teams, error)
+	SoftDeleteTeam(ctx context.Context, id string) error
 }
 
 type teamsRepository struct {
@@ -86,4 +88,23 @@ func (d *teamsRepository) GetListTeam(ctx context.Context) ([]dao.Teams, error) 
 
 	l.WithContext(ctx).Debug("[GetListTeam].domain: Completed").Msg()
 	return result, nil
+}
+
+func (d *teamsRepository) SoftDeleteTeam(ctx context.Context, id string) error {
+	l := logger.LoggerNew()
+
+	l.WithContext(ctx).Debug("[SoftDeleteTeam].domain: Started").Attr("team_id", id).Msg()
+
+	var uuidTeams pgtype.UUID
+	if err := uuidTeams.Scan(id); err != nil {
+		return constants.InvalidUUIDValue
+	}
+
+	if err := d.db.SoftDeleteTeams(ctx, uuidTeams); err != nil {
+		l.WithContext(ctx).Debug("error when soft delete team").Attr("team_id", id).Msg()
+		return err
+	}
+
+	l.WithContext(ctx).Debug("[SoftDeleteTeam].domain: Completed").Attr("team_id", id).Msg()
+	return nil
 }

@@ -13,6 +13,7 @@ import (
 type ITeamsController interface {
 	CreateTeam(g *gin.Context) api.WebResponse[*dto.CreateTeamResponse]
 	GetListTeam(g *gin.Context) api.WebResponse[[]dto.GetListTeamItem]
+	SoftDeleteTeam(g *gin.Context) api.WebResponse[any]
 }
 
 type teamsController struct {
@@ -69,7 +70,7 @@ func (c *teamsController) CreateTeam(g *gin.Context) api.WebResponse[*dto.Create
 	return c.teamsService.CreateTeam(ctx, &request)
 }
 
-// CreateTeam
+// GetListTeam
 //
 //	@Summary		Get List team
 //	@Description	Get List Team
@@ -85,4 +86,27 @@ func (c *teamsController) GetListTeam(g *gin.Context) api.WebResponse[[]dto.GetL
 
 	l.WithContext(ctx).Debug("[GetListTeam].ctrl: Started").Msg()
 	return c.teamsService.GetListTeam(ctx)
+}
+
+// SoftDeleteTeam
+//
+//	@Summary		Delete team (soft-delete)
+//	@Description	Delete team (soft-delete)
+//	@Tags			Teams
+//	@Accept			json
+//	@Produce		json
+//
+//	@Param			teamId	path		string	true	"Team ID"
+//
+//	@Success		202		{object}	api.WebResponse[any]
+//	@Failure		400		{object}	api.WebResponse[any]
+//	@Failure		500		{object}	api.WebResponse[any]
+//	@Router			/api/v1/teams/{teamId} [delete]
+func (c *teamsController) SoftDeleteTeam(g *gin.Context) api.WebResponse[any] {
+	l := logger.LoggerNew()
+	ctx := g.Request.Context()
+
+	l.WithContext(ctx).Debug("[GetListTeam].ctrl: Started").Msg()
+	teamId := g.Param("teamId")
+	return c.teamsService.SoftDeleteTeam(ctx, teamId)
 }

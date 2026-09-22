@@ -77,3 +77,15 @@ func (q *Queries) GetListTeams(ctx context.Context) ([]*GetListTeamsRow, error) 
 	}
 	return items, nil
 }
+
+const softDeleteTeams = `-- name: SoftDeleteTeams :exec
+UPDATE teams
+SET is_deleted = true,
+  deleted_at = now()
+WHERE id = $1
+`
+
+func (q *Queries) SoftDeleteTeams(ctx context.Context, id pgtype.UUID) error {
+	_, err := q.db.Exec(ctx, softDeleteTeams, id)
+	return err
+}

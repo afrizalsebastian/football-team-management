@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"errors"
 
 	"github.com/afrizalsebastian/football-team-management/api"
 	"github.com/afrizalsebastian/football-team-management/application/dto"
@@ -15,6 +16,7 @@ import (
 type ITeamsService interface {
 	CreateTeam(ctx context.Context, request *dto.CreateTeamRequest) api.WebResponse[*dto.CreateTeamResponse]
 	GetListTeam(ctx context.Context) api.WebResponse[[]dto.GetListTeamItem]
+	SoftDeleteTeam(ctx context.Context, id string) api.WebResponse[any]
 }
 
 type teamsService struct {
@@ -114,5 +116,40 @@ func (s *teamsService) GetListTeam(ctx context.Context) api.WebResponse[[]dto.Ge
 		constants.SuccessDefault.GetCode(),
 		constants.SuccessDefault.GetHttpCode(),
 		response,
+	)
+}
+
+func (s *teamsService) SoftDeleteTeam(ctx context.Context, id string) api.WebResponse[any] {
+	l := logger.LoggerNew()
+
+	l.WithContext(ctx).Debug("[SoftDeleteTeam].service: Started").Msg()
+	if err := s.teamsRepository.SoftDeleteTeam(ctx, id); err != nil {
+		l.WithContext(ctx).Debug("error when soft delete team").Attr("error", err).Msg()
+
+		if errors.Is(err, constants.InvalidUUIDValue) {
+			return api.ErrorResponse[any](
+				ctx,
+				constants.BadRequestDefault.GetMessage(),
+				constants.BadRequestDefault.GetCode(),
+				constants.BadRequestDefault.GetHttpCode(),
+				nil,
+			)
+		}
+
+		return api.ErrorResponse[any](
+			ctx,
+			constants.InternalServerError.GetMessage(),
+			constants.InternalServerError.GetCode(),
+			constants.InternalServerError.GetHttpCode(),
+			nil,
+		)
+	}
+
+	return api.SuccessResponse[any](
+		ctx,
+		constants.AcceptDefault.GetMessage(),
+		constants.AcceptDefault.GetCode(),
+		constants.AcceptDefault.GetHttpCode(),
+		nil,
 	)
 }

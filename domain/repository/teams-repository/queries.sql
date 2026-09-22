@@ -9,3 +9,9 @@ INSERT INTO teams (
 SELECT id, name, logo, founded_year
 FROM teams
 ORDER BY founded_year DESC;
+
+-- name: SoftDeleteTeams :exec
+UPDATE teams
+SET is_deleted = true,
+  deleted_at = now()
+WHERE id = @id;

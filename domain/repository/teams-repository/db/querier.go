@@ -13,6 +13,7 @@ import (
 type Querier interface {
 	CreateTeam(ctx context.Context, arg *CreateTeamParams) (pgtype.UUID, error)
 	GetListTeams(ctx context.Context) ([]*GetListTeamsRow, error)
+	SoftDeleteTeams(ctx context.Context, id pgtype.UUID) error
 }
 
 var _ Querier = (*Queries)(nil)
