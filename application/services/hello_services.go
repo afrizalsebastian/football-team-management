@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/afrizalsebastian/football-team-management/api"
-	"github.com/afrizalsebastian/football-team-management/internal"
+	"github.com/afrizalsebastian/football-team-management/constants"
 	"github.com/afrizalsebastian/football-team-management/module/logger"
 )
 
@@ -21,5 +21,5 @@ func NewHelloService() IHelloService {
 func (h *helloService) GetHello(ctx context.Context) api.WebResponse[any] {
 	l := logger.LoggerNew()
 	l.WithContext(ctx).Info("Hello from service").Msg()
-	return api.SuccessResponse[any](ctx, internal.SuccessHello.Message, internal.SuccessHello.Code, internal.SuccessHello.HttpCode, nil)
+	return api.SuccessResponse[any](ctx, constants.SuccessHello.GetMessage(), constants.SuccessHello.GetCode(), constants.SuccessHello.GetHttpCode(), nil)
 }

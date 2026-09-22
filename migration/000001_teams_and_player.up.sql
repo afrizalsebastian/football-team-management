@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS teams (
   created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
   is_deleted      BOOL DEFAULT false,
-  deleted_at      TIMESTAMPTZ
+  deleted_at      TIMESTAMPTZ DEFAULT NULL
 );
 
 
@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS players (
     created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
     is_deleted      BOOL DEFAULT false,
-    deleted_at      TIMESTAMPTZ
+    deleted_at      TIMESTAMPTZ DEFAULT NULL
 );
 
 CREATE UNIQUE INDEX IF NOT EXISTS uq_players_team_jersey
