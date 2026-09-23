@@ -1,6 +1,8 @@
 package dao
 
-import "time"
+import (
+	"time"
+)
 
 type Players struct {
 	Id           string
@@ -14,4 +16,5 @@ type Players struct {
 	UpdatedAt    time.Time
 	IsDeleted    bool
 	DeletedAt    time.Time
+	Team         *Teams
 }

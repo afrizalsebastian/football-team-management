@@ -48,3 +48,28 @@ SELECT id, team_id, name, position, jersey_number
 FROM players
 WHERE team_id = @team_id
 ORDER BY jersey_number ASC;
+
+-- name: GetListPlayer :many
+SELECT 
+  p.id as id,
+  p.name,
+  p.position,
+  p.jersey_number,
+  t.id as team_id,
+  t.name as team_name
+FROM players p
+LEFT JOIN teams t ON p.team_id = t.id
+ORDER BY p.created_at ASC;
+
+-- name: UpdatePlayers :one
+UPDATE players
+SET 
+  team_id = COALESCE(sqlc.narg('team_id'), team_id),
+  name = COALESCE(sqlc.narg('name'), name),
+  height_cm = COALESCE(sqlc.narg('height_cm'), height_cm),
+  weight_kg = COALESCE(sqlc.narg('weight_kg'), weight_kg),
+  position = COALESCE(sqlc.narg('position'), position),
+  jersey_number = COALESCE(sqlc.narg('jersey_number'), jersey_number),
+  updated_at = now()
+WHERE id = @id
+RETURNING *;

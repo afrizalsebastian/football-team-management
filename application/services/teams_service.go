@@ -19,7 +19,7 @@ type ITeamsService interface {
 	GetTeamDetail(ctx context.Context, teamId string) api.WebResponse[*dto.GetTeamDetail]
 	SoftDeleteTeam(ctx context.Context, id string) api.WebResponse[any]
 	CreatePlayerTeam(ctx context.Context, teamId string, request *dto.CreatePlayerTeamRequest) api.WebResponse[*dto.CreatePlayerTeamResponse]
-	GetListPlayerTeam(ctx context.Context, teamId string) api.WebResponse[[]dto.GetListPlayerItem]
+	GetListPlayerTeam(ctx context.Context, teamId string) api.WebResponse[[]dto.GetListTeamPlayerItem]
 	UpdateTeamData(ctx context.Context, teamId string, request *dto.UpdateTeamRequest) api.WebResponse[*dto.GetTeamDetail]
 }
 
@@ -224,13 +224,13 @@ func (s *teamsService) CreatePlayerTeam(ctx context.Context, teamId string, requ
 	)
 }
 
-func (s *teamsService) GetListPlayerTeam(ctx context.Context, teamId string) api.WebResponse[[]dto.GetListPlayerItem] {
+func (s *teamsService) GetListPlayerTeam(ctx context.Context, teamId string) api.WebResponse[[]dto.GetListTeamPlayerItem] {
 	l := logger.LoggerNew()
 
 	l.WithContext(ctx).Debug("[GetListPlayerTeam].service: Started").Msg()
 	if found := s.teamsRepository.IsTeamExists(ctx, teamId); !found {
 		l.WithContext(ctx).Warn("not found team").Msg()
-		return api.ErrorResponse[[]dto.GetListPlayerItem](
+		return api.ErrorResponse[[]dto.GetListTeamPlayerItem](
 			ctx,
 			constants.NotFoundTeam.GetMessage(),
 			constants.NotFoundTeam.GetCode(),
@@ -246,7 +246,7 @@ func (s *teamsService) GetListPlayerTeam(ctx context.Context, teamId string) api
 		if errors.Is(err, constants.InvalidUUIDValue) {
 			errMsg = constants.BadRequestDefault
 		}
-		return api.ErrorResponse[[]dto.GetListPlayerItem](
+		return api.ErrorResponse[[]dto.GetListTeamPlayerItem](
 			ctx,
 			errMsg.GetMessage(),
 			errMsg.GetCode(),
@@ -257,7 +257,7 @@ func (s *teamsService) GetListPlayerTeam(ctx context.Context, teamId string) api
 
 	if len(result) == 0 {
 		l.WithContext(ctx).Debug("empty teams data").Msg()
-		return api.SuccessResponse[[]dto.GetListPlayerItem](
+		return api.SuccessResponse[[]dto.GetListTeamPlayerItem](
 			ctx,
 			constants.SuccesssWithEmptyList.GetMessage(),
 			constants.SuccesssWithEmptyList.GetCode(),
@@ -266,7 +266,7 @@ func (s *teamsService) GetListPlayerTeam(ctx context.Context, teamId string) api
 		)
 	}
 
-	response := make([]dto.GetListPlayerItem, 0)
+	response := make([]dto.GetListTeamPlayerItem, 0)
 	for _, r := range result {
 		var positionCode, positionTitle string
 		position := constants.DictPlayerPosition.GetValue(helper.GetStringPtrValue(r.Position))
@@ -274,7 +274,7 @@ func (s *teamsService) GetListPlayerTeam(ctx context.Context, teamId string) api
 			positionCode, positionTitle = position.Code, position.Title
 		}
 
-		response = append(response, dto.GetListPlayerItem{
+		response = append(response, dto.GetListTeamPlayerItem{
 			Id:     r.Id,
 			TeamId: r.TeamId,
 			Name:   helper.GetStringPtrValue(r.Name),
@@ -289,9 +289,9 @@ func (s *teamsService) GetListPlayerTeam(ctx context.Context, teamId string) api
 	l.WithContext(ctx).Debug("[GetListPlayerTeam].service: Completed").Msg()
 	return api.SuccessResponse(
 		ctx,
-		constants.SuccesssWithEmptyList.GetMessage(),
-		constants.SuccesssWithEmptyList.GetCode(),
-		constants.SuccesssWithEmptyList.GetHttpCode(),
+		constants.SuccessDefault.GetMessage(),
+		constants.SuccessDefault.GetCode(),
+		constants.SuccessDefault.GetHttpCode(),
 		response,
 	)
 }
@@ -336,9 +336,9 @@ func (s *teamsService) GetTeamDetail(ctx context.Context, teamId string) api.Web
 	l.WithContext(ctx).Debug("[GetTeamDetail].service: Completed").Msg()
 	return api.SuccessResponse(
 		ctx,
-		constants.SuccesssWithEmptyList.GetMessage(),
-		constants.SuccesssWithEmptyList.GetCode(),
-		constants.SuccesssWithEmptyList.GetHttpCode(),
+		constants.SuccessDefault.GetMessage(),
+		constants.SuccessDefault.GetCode(),
+		constants.SuccessDefault.GetHttpCode(),
 		response,
 	)
 }

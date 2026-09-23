@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/afrizalsebastian/football-team-management/application/helper"
@@ -9,6 +10,7 @@ import (
 	"github.com/afrizalsebastian/football-team-management/domain/dao"
 	playerdb "github.com/afrizalsebastian/football-team-management/domain/repository/queries/db"
 	"github.com/afrizalsebastian/football-team-management/module/logger"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -16,6 +18,8 @@ import (
 type IPlayersRepository interface {
 	CreateTeamPlayer(ctx context.Context, player *dao.Players) error
 	GetPlayerTeamByTeamId(ctx context.Context, teamId string) ([]dao.Players, error)
+	GetListPlayer(ctx context.Context) ([]dao.Players, error)
+	UpdatePartialPlayer(ctx context.Context, player *dao.Players) error
 }
 
 type playerRepository struct {
@@ -117,4 +121,122 @@ func (d *playerRepository) GetPlayerTeamByTeamId(ctx context.Context, teamIdStr 
 	}
 
 	return result, nil
+}
+
+func (d *playerRepository) GetListPlayer(ctx context.Context) ([]dao.Players, error) {
+	l := logger.LoggerNew()
+
+	l.WithContext(ctx).Debug("[GetListPlayer].domain: Started").Msg()
+
+	rows, err := d.db.GetListPlayer(ctx)
+	if err != nil {
+		l.WithContext(ctx).
+			Error("Error when get list player").
+			Attr("error", err).
+			Msg()
+
+		return nil, err
+	}
+
+	result := make([]dao.Players, 0)
+	for _, r := range rows {
+		if r == nil {
+			continue
+		}
+
+		result = append(result, dao.Players{
+			Id:           r.ID.String(),
+			Name:         helper.StringPtr(r.Name),
+			Position:     helper.StringPtr(string(r.Position)),
+			JerseyNumber: helper.IntPtr(int(r.JerseyNumber)),
+			TeamId:       r.TeamID.String(),
+			Team: &dao.Teams{
+				Id:   r.TeamID.String(),
+				Name: helper.StringPtr(r.TeamName.String),
+			},
+		})
+	}
+
+	l.WithContext(ctx).Debug("[GetListPlayer].domain: Completed").Msg()
+	return result, nil
+}
+
+func (d *playerRepository) UpdatePartialPlayer(ctx context.Context, player *dao.Players) error {
+	l := logger.LoggerNew()
+
+	l.WithContext(ctx).Debug("[UpdatePartialPlayer].domain: Started").Msg()
+
+	params, err := d.createUpdatePlayerParams(player)
+	if err != nil {
+		l.WithContext(ctx).Error("error when mapping params").
+			Attr("error", err).Attr("player_id", player.Id).Msg()
+		return err
+	}
+
+	row, err := d.db.UpdatePlayers(ctx, params)
+	if err != nil {
+		l.WithContext(ctx).Error("error when update player data").
+			Attr("error", err).Attr("player_id", player.Id).Msg()
+		if errors.Is(err, pgx.ErrNoRows) {
+			return constants.ErrNotFoundRow
+		}
+		return err
+	}
+
+	height, _ := row.HeightCm.Float64Value()
+	weight, _ := row.WeightKg.Float64Value()
+
+	player.Name = helper.StringPtr(row.Name)
+	player.Height = helper.Float64Ptr(height.Float64)
+	player.Weight = helper.Float64Ptr(weight.Float64)
+	player.TeamId = row.TeamID.String()
+	player.Position = helper.StringPtr(string(row.Position))
+	player.JerseyNumber = helper.IntPtr(int(row.JerseyNumber))
+	player.CreatedAt = row.CreatedAt.Time
+	player.UpdatedAt = row.UpdatedAt.Time
+	player.IsDeleted = row.IsDeleted.Bool
+	player.DeletedAt = row.DeletedAt.Time
+
+	return nil
+}
+
+func (d *playerRepository) createUpdatePlayerParams(player *dao.Players) (*playerdb.UpdatePlayersParams, error) {
+	var (
+		teamId   pgtype.UUID
+		id       pgtype.UUID
+		heightCm pgtype.Numeric
+		weightKg pgtype.Numeric
+	)
+
+	if err := id.Scan(player.Id); err != nil {
+		return nil, constants.InvalidUUIDValue
+	}
+
+	if player.TeamId != "" {
+		if err := teamId.Scan(player.Team.Id); err != nil {
+			return nil, constants.InvalidUUIDValue
+		}
+	}
+
+	if player.Height != nil {
+		if err := heightCm.Scan(fmt.Sprintf("%f", helper.GetFloat64PtrValue(player.Height))); err != nil {
+			return nil, constants.InvalidFieldValue
+		}
+	}
+
+	if player.Weight != nil {
+		if err := weightKg.Scan(fmt.Sprintf("%f", helper.GetFloat64PtrValue(player.Weight))); err != nil {
+			return nil, constants.InvalidFieldValue
+		}
+	}
+
+	return &playerdb.UpdatePlayersParams{
+		ID:           id,
+		TeamID:       teamId,
+		HeightCm:     heightCm,
+		WeightKg:     weightKg,
+		Name:         StringPtrToPgtypeText(player.Name),
+		JerseyNumber: IntPtrToPgTypeInt2(player.JerseyNumber),
+		Position:     PositionPtrToNullPlayerPosition(player.Position),
+	}, nil
 }

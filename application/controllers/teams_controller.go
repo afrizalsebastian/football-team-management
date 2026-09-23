@@ -15,7 +15,7 @@ type ITeamsController interface {
 	GetListTeam(g *gin.Context) api.WebResponse[[]dto.GetListTeamItem]
 	SoftDeleteTeam(g *gin.Context) api.WebResponse[any]
 	CreateTeamPlayer(g *gin.Context) api.WebResponse[*dto.CreatePlayerTeamResponse]
-	GetListTeamPlayer(g *gin.Context) api.WebResponse[[]dto.GetListPlayerItem]
+	GetListTeamPlayer(g *gin.Context) api.WebResponse[[]dto.GetListTeamPlayerItem]
 	GetTeamDetail(g *gin.Context) api.WebResponse[*dto.GetTeamDetail]
 	UpdateTeam(g *gin.Context) api.WebResponse[*dto.GetTeamDetail]
 }
@@ -173,11 +173,11 @@ func (c *teamsController) CreateTeamPlayer(g *gin.Context) api.WebResponse[*dto.
 //
 //	@Param			teamId	path		string	true	"Team ID"
 //
-//	@Success		200		{object}	api.WebResponse[[]dto.GetListPlayerItem]
+//	@Success		200		{object}	api.WebResponse[[]dto.GetListTeamPlayerItem]
 //	@Failure		400		{object}	api.WebResponse[any]
 //	@Failure		500		{object}	api.WebResponse[any]
 //	@Router			/api/v1/teams/{teamId}/players [get]
-func (c *teamsController) GetListTeamPlayer(g *gin.Context) api.WebResponse[[]dto.GetListPlayerItem] {
+func (c *teamsController) GetListTeamPlayer(g *gin.Context) api.WebResponse[[]dto.GetListTeamPlayerItem] {
 	l := logger.LoggerNew()
 	ctx := g.Request.Context()
 

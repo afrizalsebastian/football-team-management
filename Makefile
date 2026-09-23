@@ -6,14 +6,14 @@ MIGRATION_PATH=./migration
 SQLC_CONFIG=./sqlc.yaml
 MAIN=./main.go
 
-.PHONY: help migrate-create migrate-up migrate-down migrate-drop sqlc-generate sqlc-verify swag-init swag-fmt dep run
+.PHONY: help migrate-create migrate-up migrate-down migrate-drop sqlc-gen sqlc-verify swag-init swag-fmt dep run
 help:
 	@echo "Available commands:"
 	@echo "  make migrate-create name=<name>  Create migration"
 	@echo "  make migrate-up                  Run migrations"
 	@echo "  make migrate-down                Rollback 1 migration"
 	@echo "  make migrate-drop                Drop database migrations"
-	@echo "  make sqlc-generate               Generate sqlc code"
+	@echo "  make sqlc-gen               Generate sqlc code"
 	@echo "  make sqlc-verify                 Verify sqlc"
 	@echo "  make dep                					Install Go dependencies"
 	@echo "  make run                         Run application"
@@ -30,7 +30,7 @@ migrate-down:
 migrate-drop:
 	migrate -path $(MIGRATION_PATH) -database "$(DB_URL)" -verbose drop -f
 
-sqlc-generate:
+sqlc-gen:
 	sqlc generate -f $(SQLC_CONFIG)
 
 sqlc-verify:

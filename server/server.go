@@ -11,15 +11,17 @@ import (
 )
 
 type HttpServer struct {
-	HelloController controllers.IHelloController
-	TeamsController controllers.ITeamsController
+	HelloController  controllers.IHelloController
+	TeamsController  controllers.ITeamsController
+	PlayerController controllers.IPlayersController
 }
 
 func NewServer(app *bootstrap.FootballManagementApp) *HttpServer {
 	di := initDI(app)
 	return &HttpServer{
-		HelloController: di.HelloController,
-		TeamsController: di.TeamsController,
+		HelloController:  di.HelloController,
+		TeamsController:  di.TeamsController,
+		PlayerController: di.PlayerController,
 	}
 }
 
@@ -92,5 +94,23 @@ func (s *HttpServer) UpdateTeam(c *gin.Context) {
 
 	c.Request = c.Request.WithContext(ctx)
 	resp := s.TeamsController.UpdateTeam(c)
+	api.WriteJSONResponse(c, resp.HttpCode, resp)
+}
+
+func (s *HttpServer) GetListPlayer(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 30*time.Second)
+	defer cancel()
+
+	c.Request = c.Request.WithContext(ctx)
+	resp := s.PlayerController.GetListPlayer(c)
+	api.WriteJSONResponse(c, resp.HttpCode, resp)
+}
+
+func (s *HttpServer) UpdatePlayer(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 30*time.Second)
+	defer cancel()
+
+	c.Request = c.Request.WithContext(ctx)
+	resp := s.PlayerController.UpdatePlayer(c)
 	api.WriteJSONResponse(c, resp.HttpCode, resp)
 }

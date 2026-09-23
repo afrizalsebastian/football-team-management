@@ -36,7 +36,7 @@ type GetTeamDetail struct {
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
 	IsDeleted   bool      `json:"is_deleted"`
-	DeletedAt   time.Time `json:"deleted_at"`
+	DeletedAt   time.Time `json:"deleted_at,omitempty"`
 }
 
 type UpdateTeamRequest struct {

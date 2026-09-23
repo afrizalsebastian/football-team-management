@@ -42,6 +42,88 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/players": {
+            "get": {
+                "description": "Get List Player",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Players"
+                ],
+                "summary": "Get List Player",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.WebResponse-array_dto_GetListPlayerItem"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.WebResponse-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/players/{playerId}": {
+            "put": {
+                "description": "Update Player Data",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Players"
+                ],
+                "summary": "Update Player Data",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Player Id",
+                        "name": "playerId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Update player request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.UpdatePlayerRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/api.WebResponse-dto_GetPlayerDetailResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.WebResponse-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.WebResponse-any"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/teams": {
             "get": {
                 "description": "Get List Team",
@@ -278,7 +360,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.WebResponse-array_dto_GetListPlayerItem"
+                            "$ref": "#/definitions/api.WebResponse-array_dto_GetListTeamPlayerItem"
                         }
                     },
                     "400": {
@@ -454,6 +536,38 @@ const docTemplate = `{
                 }
             }
         },
+        "api.WebResponse-array_dto_GetListTeamPlayerItem": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.GetListTeamPlayerItem"
+                    }
+                },
+                "error_message": {
+                    "type": "string"
+                },
+                "errors_detail": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api.ErrorsDetail"
+                    }
+                },
+                "http_code": {
+                    "type": "integer"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "message_code": {
+                    "type": "integer"
+                },
+                "message_id": {
+                    "type": "string"
+                }
+            }
+        },
         "api.WebResponse-dto_CreatePlayerTeamResponse": {
             "type": "object",
             "properties": {
@@ -488,6 +602,35 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/dto.CreateTeamResponse"
+                },
+                "error_message": {
+                    "type": "string"
+                },
+                "errors_detail": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api.ErrorsDetail"
+                    }
+                },
+                "http_code": {
+                    "type": "integer"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "message_code": {
+                    "type": "integer"
+                },
+                "message_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.WebResponse-dto_GetPlayerDetailResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/dto.GetPlayerDetailResponse"
                 },
                 "error_message": {
                     "type": "string"
@@ -659,8 +802,8 @@ const docTemplate = `{
                 "position": {
                     "$ref": "#/definitions/dto.PlayerPosition"
                 },
-                "team_id": {
-                    "type": "string"
+                "team": {
+                    "$ref": "#/definitions/dto.ListPlayerItemTeam"
                 }
             }
         },
@@ -678,6 +821,67 @@ const docTemplate = `{
                 },
                 "name": {
                     "type": "string"
+                }
+            }
+        },
+        "dto.GetListTeamPlayerItem": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "jersey_number": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "position": {
+                    "$ref": "#/definitions/dto.PlayerPosition"
+                },
+                "team_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.GetPlayerDetailResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "deleted_at": {
+                    "type": "string"
+                },
+                "height": {
+                    "type": "number"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "is_deleted": {
+                    "type": "boolean"
+                },
+                "jersey_number": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "position": {
+                    "$ref": "#/definitions/dto.PlayerPosition"
+                },
+                "team": {
+                    "$ref": "#/definitions/dto.ListPlayerItemTeam"
+                },
+                "team_id": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "weight": {
+                    "type": "number"
                 }
             }
         },
@@ -716,6 +920,17 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.ListPlayerItemTeam": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
         "dto.PlayerPosition": {
             "type": "object",
             "properties": {
@@ -724,6 +939,29 @@ const docTemplate = `{
                 },
                 "title": {
                     "type": "string"
+                }
+            }
+        },
+        "dto.UpdatePlayerRequest": {
+            "type": "object",
+            "properties": {
+                "height": {
+                    "type": "number"
+                },
+                "jersey_number": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "position": {
+                    "type": "string"
+                },
+                "team_id": {
+                    "type": "string"
+                },
+                "weight": {
+                    "type": "number"
                 }
             }
         },

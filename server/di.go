@@ -8,14 +8,16 @@ import (
 )
 
 type ServerDependencies struct {
-	HelloController controllers.IHelloController
-	TeamsController controllers.ITeamsController
+	HelloController  controllers.IHelloController
+	TeamsController  controllers.ITeamsController
+	PlayerController controllers.IPlayersController
 }
 
 func initDI(app *bootstrap.FootballManagementApp) *ServerDependencies {
 	return &ServerDependencies{
-		HelloController: setupHelloControllers(),
-		TeamsController: setupTeamsController(app),
+		HelloController:  setupHelloControllers(),
+		TeamsController:  setupTeamsController(app),
+		PlayerController: setupPlayerController(app),
 	}
 }
 
@@ -31,6 +33,15 @@ func setupTeamsController(app *bootstrap.FootballManagementApp) controllers.ITea
 	playerRepository := repository.NewPlayerRepository(app.DBPool)
 	service := services.NewTeamsService(teamRepository, playerRepository)
 	ctrl := controllers.NewTeamsController(service)
+
+	return ctrl
+}
+
+func setupPlayerController(app *bootstrap.FootballManagementApp) controllers.IPlayersController {
+	teamRepository := repository.NewTeamsRepository(app.DBPool)
+	playerRepository := repository.NewPlayerRepository(app.DBPool)
+	service := services.NewPlayerService(playerRepository, teamRepository)
+	ctrl := controllers.NewPlayerController(service)
 
 	return ctrl
 }

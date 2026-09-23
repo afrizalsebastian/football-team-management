@@ -59,6 +59,7 @@ func main() {
 	{
 		routes.SetupHelloRoutes(apiV1, httpServer)
 		routes.SetupTeamsRoutes(apiV1, httpServer)
+		routes.SetupPlayerRoutes(apiV1, httpServer)
 	}
 
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))

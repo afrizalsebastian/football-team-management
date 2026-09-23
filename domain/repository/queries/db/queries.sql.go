@@ -82,6 +82,55 @@ func (q *Queries) CreateTeam(ctx context.Context, arg *CreateTeamParams) (pgtype
 	return id, err
 }
 
+const getListPlayer = `-- name: GetListPlayer :many
+SELECT 
+  p.id as id,
+  p.name,
+  p.position,
+  p.jersey_number,
+  t.id as team_id,
+  t.name as team_name
+FROM players p
+LEFT JOIN teams t ON p.team_id = t.id
+ORDER BY p.created_at ASC
+`
+
+type GetListPlayerRow struct {
+	ID           pgtype.UUID    `json:"id"`
+	Name         string         `json:"name"`
+	Position     PlayerPosition `json:"position"`
+	JerseyNumber int16          `json:"jersey_number"`
+	TeamID       pgtype.UUID    `json:"team_id"`
+	TeamName     pgtype.Text    `json:"team_name"`
+}
+
+func (q *Queries) GetListPlayer(ctx context.Context) ([]*GetListPlayerRow, error) {
+	rows, err := q.db.Query(ctx, getListPlayer)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []*GetListPlayerRow{}
+	for rows.Next() {
+		var i GetListPlayerRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Position,
+			&i.JerseyNumber,
+			&i.TeamID,
+			&i.TeamName,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getListPlayerTeam = `-- name: GetListPlayerTeam :many
 SELECT id, team_id, name, position, jersey_number
 FROM players
@@ -197,6 +246,57 @@ func (q *Queries) SoftDeleteTeams(ctx context.Context, id pgtype.UUID) (pgtype.U
 	var id_2 pgtype.UUID
 	err := row.Scan(&id_2)
 	return id_2, err
+}
+
+const updatePlayers = `-- name: UpdatePlayers :one
+UPDATE players
+SET 
+  team_id = COALESCE($1, team_id),
+  name = COALESCE($2, name),
+  height_cm = COALESCE($3, height_cm),
+  weight_kg = COALESCE($4, weight_kg),
+  position = COALESCE($5, position),
+  jersey_number = COALESCE($6, jersey_number),
+  updated_at = now()
+WHERE id = $7
+RETURNING id, team_id, name, height_cm, weight_kg, position, jersey_number, created_at, updated_at, is_deleted, deleted_at
+`
+
+type UpdatePlayersParams struct {
+	TeamID       pgtype.UUID        `json:"team_id"`
+	Name         pgtype.Text        `json:"name"`
+	HeightCm     pgtype.Numeric     `json:"height_cm"`
+	WeightKg     pgtype.Numeric     `json:"weight_kg"`
+	Position     NullPlayerPosition `json:"position"`
+	JerseyNumber pgtype.Int2        `json:"jersey_number"`
+	ID           pgtype.UUID        `json:"id"`
+}
+
+func (q *Queries) UpdatePlayers(ctx context.Context, arg *UpdatePlayersParams) (*Player, error) {
+	row := q.db.QueryRow(ctx, updatePlayers,
+		arg.TeamID,
+		arg.Name,
+		arg.HeightCm,
+		arg.WeightKg,
+		arg.Position,
+		arg.JerseyNumber,
+		arg.ID,
+	)
+	var i Player
+	err := row.Scan(
+		&i.ID,
+		&i.TeamID,
+		&i.Name,
+		&i.HeightCm,
+		&i.WeightKg,
+		&i.Position,
+		&i.JerseyNumber,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.IsDeleted,
+		&i.DeletedAt,
+	)
+	return &i, err
 }
 
 const updateTeams = `-- name: UpdateTeams :one

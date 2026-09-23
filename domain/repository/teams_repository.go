@@ -182,7 +182,7 @@ func (d *teamsRepository) UpdatePartialTeam(ctx context.Context, team *dao.Teams
 	team.CreatedAt = result.CreatedAt.Time
 	team.UpdatedAt = result.UpdatedAt.Time
 	team.IsDeleted = result.IsDeleted.Bool
-	team.DeletedAt = result.CreatedAt.Time
+	team.DeletedAt = result.DeletedAt.Time
 
 	return nil
 }
