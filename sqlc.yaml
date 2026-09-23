@@ -1,12 +1,12 @@
 version: "2"
 sql:
   - engine: "postgresql"
-    queries: "domain/repository/teams-repository"
+    queries: "domain/repository/queries"
     schema: "migration"
     gen:
       go:
-        package: "teamsdb"
-        out: "domain/repository/teams-repository/db"
+        package: "db"
+        out: "domain/repository/queries/db"
         sql_package: "pgx/v5"
         emit_empty_slices: true
         emit_json_tags: true

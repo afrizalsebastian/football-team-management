@@ -2,7 +2,7 @@
 // versions:
 //   sqlc v1.31.1
 
-package teamsdb
+package db
 
 import (
 	"context"
@@ -11,6 +11,7 @@ import (
 )
 
 type Querier interface {
+	CreatePlayerTeam(ctx context.Context, arg *CreatePlayerTeamParams) (pgtype.UUID, error)
 	CreateTeam(ctx context.Context, arg *CreateTeamParams) (pgtype.UUID, error)
 	GetListTeams(ctx context.Context) ([]*GetListTeamsRow, error)
 	SoftDeleteTeams(ctx context.Context, id pgtype.UUID) error

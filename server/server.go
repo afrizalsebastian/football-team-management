@@ -58,3 +58,12 @@ func (s *HttpServer) SoftDeleteTeam(c *gin.Context) {
 	resp := s.TeamsController.SoftDeleteTeam(c)
 	api.WriteJSONResponse(c, resp.HttpCode, resp)
 }
+
+func (s *HttpServer) CreateTeamPlayer(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 30*time.Second)
+	defer cancel()
+
+	c.Request = c.Request.WithContext(ctx)
+	resp := s.TeamsController.CreateTeamPlayer(c)
+	api.WriteJSONResponse(c, resp.HttpCode, resp)
+}

@@ -40,7 +40,8 @@ var (
 	AcceptDefault         = registerResponseCode("Accpeted", 202000, http.StatusAccepted)
 
 	// 4XX
-	BadRequestDefault = registerResponseCode("Bad request", 400000, http.StatusBadRequest)
+	BadRequestDefault   = registerResponseCode("Bad request", 400000, http.StatusBadRequest)
+	InvalidJerseyNumber = registerResponseCode("Jersery number already used by active player", 400001, http.StatusBadRequest)
 
 	// 5XX
 	InternalServerError = registerResponseCode("Internal Server Error", 500000, http.StatusInternalServerError)

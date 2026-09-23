@@ -9,7 +9,7 @@ import (
 	"github.com/afrizalsebastian/football-team-management/application/helper"
 	"github.com/afrizalsebastian/football-team-management/constants"
 	"github.com/afrizalsebastian/football-team-management/domain/dao"
-	teams_repository "github.com/afrizalsebastian/football-team-management/domain/repository/teams-repository"
+	"github.com/afrizalsebastian/football-team-management/domain/repository"
 	"github.com/afrizalsebastian/football-team-management/module/logger"
 )
 
@@ -17,15 +17,21 @@ type ITeamsService interface {
 	CreateTeam(ctx context.Context, request *dto.CreateTeamRequest) api.WebResponse[*dto.CreateTeamResponse]
 	GetListTeam(ctx context.Context) api.WebResponse[[]dto.GetListTeamItem]
 	SoftDeleteTeam(ctx context.Context, id string) api.WebResponse[any]
+	CreatePlayerTeam(ctx context.Context, teamId string, request *dto.CreatePlayerTeamRequest) api.WebResponse[*dto.CreatePlayerTeamResponse]
 }
 
 type teamsService struct {
-	teamsRepository teams_repository.ITeamsRepository
+	teamsRepository  repository.ITeamsRepository
+	playerRepository repository.IPlayersRepository
 }
 
-func NewTeamsService(teamsRepository teams_repository.ITeamsRepository) ITeamsService {
+func NewTeamsService(
+	teamsRepository repository.ITeamsRepository,
+	playerRepository repository.IPlayersRepository,
+) ITeamsService {
 	return &teamsService{
-		teamsRepository: teamsRepository,
+		teamsRepository:  teamsRepository,
+		playerRepository: playerRepository,
 	}
 }
 
@@ -145,11 +151,74 @@ func (s *teamsService) SoftDeleteTeam(ctx context.Context, id string) api.WebRes
 		)
 	}
 
+	l.WithContext(ctx).Debug("[SoftDeleteTeam].service: Completed").Msg()
 	return api.SuccessResponse[any](
 		ctx,
 		constants.AcceptDefault.GetMessage(),
 		constants.AcceptDefault.GetCode(),
 		constants.AcceptDefault.GetHttpCode(),
 		nil,
+	)
+}
+
+func (s *teamsService) CreatePlayerTeam(ctx context.Context, teamId string, request *dto.CreatePlayerTeamRequest) api.WebResponse[*dto.CreatePlayerTeamResponse] {
+	l := logger.LoggerNew()
+
+	l.WithContext(ctx).Debug("[CreatePlayerTeam].service: Started").Msg()
+	player := &dao.Players{
+		TeamId:       teamId,
+		Name:         helper.StringPtr(request.Name),
+		Height:       helper.Float64Ptr(request.Height),
+		Weight:       helper.Float64Ptr(request.Weight),
+		Position:     helper.StringPtr(request.Position),
+		JerseyNumber: helper.IntPtr(request.JerseyNumber),
+	}
+
+	if err := s.playerRepository.CreateTeamPlayer(ctx, player); err != nil {
+		l.WithContext(ctx).Debug("error when create team player").Attr("error", err).Msg()
+		if errors.Is(err, constants.InvalidUUIDValue) || errors.Is(err, constants.InvalidFieldValue) {
+			return api.ErrorResponse[*dto.CreatePlayerTeamResponse](
+				ctx,
+				constants.BadRequestDefault.GetMessage(),
+				constants.BadRequestDefault.GetCode(),
+				constants.BadRequestDefault.GetHttpCode(),
+				nil,
+			)
+		}
+
+		if errors.Is(err, constants.DuplicateRow) {
+			return api.ErrorResponse[*dto.CreatePlayerTeamResponse](
+				ctx,
+				constants.InvalidJerseyNumber.GetMessage(),
+				constants.InvalidJerseyNumber.GetCode(),
+				constants.InvalidJerseyNumber.GetHttpCode(),
+				nil,
+			)
+		}
+
+		return api.ErrorResponse[*dto.CreatePlayerTeamResponse](
+			ctx,
+			constants.InternalServerError.GetMessage(),
+			constants.InternalServerError.GetCode(),
+			constants.InternalServerError.GetHttpCode(),
+			nil,
+		)
+	}
+
+	response := &dto.CreatePlayerTeamResponse{
+		Id:           player.Id,
+		TeamId:       teamId,
+		Height:       helper.GetFloat64PtrValue(player.Height),
+		Weight:       helper.GetFloat64PtrValue(player.Weight),
+		Position:     helper.GetStringPtrValue(player.Position),
+		JerseyNumber: helper.GetIntPtrValue(player.JerseyNumber),
+	}
+
+	return api.SuccessResponse[*dto.CreatePlayerTeamResponse](
+		ctx,
+		constants.CreatedDefault.GetMessage(),
+		constants.CreatedDefault.GetCode(),
+		constants.CreatedDefault.GetHttpCode(),
+		response,
 	)
 }

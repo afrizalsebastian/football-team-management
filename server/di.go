@@ -4,7 +4,7 @@ import (
 	"github.com/afrizalsebastian/football-team-management/application/controllers"
 	"github.com/afrizalsebastian/football-team-management/application/services"
 	"github.com/afrizalsebastian/football-team-management/bootstrap"
-	teams_repository "github.com/afrizalsebastian/football-team-management/domain/repository/teams-repository"
+	"github.com/afrizalsebastian/football-team-management/domain/repository"
 )
 
 type ServerDependencies struct {
@@ -27,8 +27,9 @@ func setupHelloControllers() controllers.IHelloController {
 }
 
 func setupTeamsController(app *bootstrap.FootballManagementApp) controllers.ITeamsController {
-	repository := teams_repository.NewTeamsRepository(app.DBPool)
-	service := services.NewTeamsService(repository)
+	teamRepository := repository.NewTeamsRepository(app.DBPool)
+	playerRepository := repository.NewPlayerRepository(app.DBPool)
+	service := services.NewTeamsService(teamRepository, playerRepository)
 	ctrl := controllers.NewTeamsController(service)
 
 	return ctrl

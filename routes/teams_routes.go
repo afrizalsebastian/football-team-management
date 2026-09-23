@@ -11,5 +11,6 @@ func SetupTeamsRoutes(router *gin.RouterGroup, server *server.HttpServer) {
 		teamGroup.POST("/", server.PostCreateTeam)
 		teamGroup.GET("/", server.GetListTeam)
 		teamGroup.DELETE("/:teamId", server.SoftDeleteTeam)
+		teamGroup.POST("/:teamId/players", server.CreateTeamPlayer)
 	}
 }

@@ -151,6 +151,59 @@
                     }
                 }
             }
+        },
+        "/api/v1/teams/{teamId}/players": {
+            "post": {
+                "description": "Create a new team Player",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Teams"
+                ],
+                "summary": "Create Team Player",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Team ID",
+                        "name": "teamId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Create team bory request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreatePlayerTeamRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/api.WebResponse-dto_CreatePlayerTeamResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.WebResponse-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.WebResponse-any"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -227,6 +280,35 @@
                 }
             }
         },
+        "api.WebResponse-dto_CreatePlayerTeamResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/dto.CreatePlayerTeamResponse"
+                },
+                "error_message": {
+                    "type": "string"
+                },
+                "errors_detail": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api.ErrorsDetail"
+                    }
+                },
+                "http_code": {
+                    "type": "integer"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "message_code": {
+                    "type": "integer"
+                },
+                "message_id": {
+                    "type": "string"
+                }
+            }
+        },
         "api.WebResponse-dto_CreateTeamResponse": {
             "type": "object",
             "properties": {
@@ -253,6 +335,59 @@
                 },
                 "message_id": {
                     "type": "string"
+                }
+            }
+        },
+        "dto.CreatePlayerTeamRequest": {
+            "type": "object",
+            "required": [
+                "Position",
+                "height",
+                "jersey_number",
+                "name",
+                "weight"
+            ],
+            "properties": {
+                "Position": {
+                    "type": "string"
+                },
+                "height": {
+                    "type": "number"
+                },
+                "jersey_number": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "weight": {
+                    "type": "number"
+                }
+            }
+        },
+        "dto.CreatePlayerTeamResponse": {
+            "type": "object",
+            "properties": {
+                "Position": {
+                    "type": "string"
+                },
+                "height": {
+                    "type": "number"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "jersey_number": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "team_id": {
+                    "type": "string"
+                },
+                "weight": {
+                    "type": "number"
                 }
             }
         },

@@ -15,3 +15,10 @@ UPDATE teams
 SET is_deleted = true,
   deleted_at = now()
 WHERE id = @id;
+
+-- name: CreatePlayerTeam :one
+INSERT INTO players (
+  team_id, name, height_cm, weight_kg, position, jersey_number
+) VALUES (
+  @team_id, @name, @height_cm, @weight_kg, @position, @jersey_number
+) RETURNING id;

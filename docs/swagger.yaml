@@ -47,6 +47,25 @@ definitions:
       message_id:
         type: string
     type: object
+  api.WebResponse-dto_CreatePlayerTeamResponse:
+    properties:
+      data:
+        $ref: '#/definitions/dto.CreatePlayerTeamResponse'
+      error_message:
+        type: string
+      errors_detail:
+        items:
+          $ref: '#/definitions/api.ErrorsDetail'
+        type: array
+      http_code:
+        type: integer
+      message:
+        type: string
+      message_code:
+        type: integer
+      message_id:
+        type: string
+    type: object
   api.WebResponse-dto_CreateTeamResponse:
     properties:
       data:
@@ -65,6 +84,42 @@ definitions:
         type: integer
       message_id:
         type: string
+    type: object
+  dto.CreatePlayerTeamRequest:
+    properties:
+      Position:
+        type: string
+      height:
+        type: number
+      jersey_number:
+        type: integer
+      name:
+        type: string
+      weight:
+        type: number
+    required:
+    - Position
+    - height
+    - jersey_number
+    - name
+    - weight
+    type: object
+  dto.CreatePlayerTeamResponse:
+    properties:
+      Position:
+        type: string
+      height:
+        type: number
+      id:
+        type: string
+      jersey_number:
+        type: integer
+      name:
+        type: string
+      team_id:
+        type: string
+      weight:
+        type: number
     type: object
   dto.CreateTeamRequest:
     properties:
@@ -211,6 +266,41 @@ paths:
           schema:
             $ref: '#/definitions/api.WebResponse-any'
       summary: Delete team (soft-delete)
+      tags:
+      - Teams
+  /api/v1/teams/{teamId}/players:
+    post:
+      consumes:
+      - application/json
+      description: Create a new team Player
+      parameters:
+      - description: Team ID
+        in: path
+        name: teamId
+        required: true
+        type: string
+      - description: Create team bory request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreatePlayerTeamRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/api.WebResponse-dto_CreatePlayerTeamResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.WebResponse-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.WebResponse-any'
+      summary: Create Team Player
       tags:
       - Teams
 swagger: "2.0"

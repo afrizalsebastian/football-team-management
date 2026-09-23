@@ -1,4 +1,4 @@
-package teams_repository
+package repository
 
 import (
 	"context"
@@ -6,7 +6,7 @@ import (
 	"github.com/afrizalsebastian/football-team-management/application/helper"
 	"github.com/afrizalsebastian/football-team-management/constants"
 	"github.com/afrizalsebastian/football-team-management/domain/dao"
-	teamsdb "github.com/afrizalsebastian/football-team-management/domain/repository/teams-repository/db"
+	teamsdb "github.com/afrizalsebastian/football-team-management/domain/repository/queries/db"
 	"github.com/afrizalsebastian/football-team-management/module/logger"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"

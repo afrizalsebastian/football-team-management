@@ -3,13 +3,44 @@
 //   sqlc v1.31.1
 // source: queries.sql
 
-package teamsdb
+package db
 
 import (
 	"context"
 
 	"github.com/jackc/pgx/v5/pgtype"
 )
+
+const createPlayerTeam = `-- name: CreatePlayerTeam :one
+INSERT INTO players (
+  team_id, name, height_cm, weight_kg, position, jersey_number
+) VALUES (
+  $1, $2, $3, $4, $5, $6
+) RETURNING id
+`
+
+type CreatePlayerTeamParams struct {
+	TeamID       pgtype.UUID    `json:"team_id"`
+	Name         string         `json:"name"`
+	HeightCm     pgtype.Numeric `json:"height_cm"`
+	WeightKg     pgtype.Numeric `json:"weight_kg"`
+	Position     PlayerPosition `json:"position"`
+	JerseyNumber int16          `json:"jersey_number"`
+}
+
+func (q *Queries) CreatePlayerTeam(ctx context.Context, arg *CreatePlayerTeamParams) (pgtype.UUID, error) {
+	row := q.db.QueryRow(ctx, createPlayerTeam,
+		arg.TeamID,
+		arg.Name,
+		arg.HeightCm,
+		arg.WeightKg,
+		arg.Position,
+		arg.JerseyNumber,
+	)
+	var id pgtype.UUID
+	err := row.Scan(&id)
+	return id, err
+}
 
 const createTeam = `-- name: CreateTeam :one
 INSERT INTO teams (
