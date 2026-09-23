@@ -15,6 +15,9 @@ type ITeamsController interface {
 	GetListTeam(g *gin.Context) api.WebResponse[[]dto.GetListTeamItem]
 	SoftDeleteTeam(g *gin.Context) api.WebResponse[any]
 	CreateTeamPlayer(g *gin.Context) api.WebResponse[*dto.CreatePlayerTeamResponse]
+	GetListTeamPlayer(g *gin.Context) api.WebResponse[[]dto.GetListPlayerItem]
+	GetTeamDetail(g *gin.Context) api.WebResponse[*dto.GetTeamDetail]
+	UpdateTeam(g *gin.Context) api.WebResponse[*dto.GetTeamDetail]
 }
 
 type teamsController struct {
@@ -158,4 +161,85 @@ func (c *teamsController) CreateTeamPlayer(g *gin.Context) api.WebResponse[*dto.
 
 	teamId := g.Param("teamId")
 	return c.teamsService.CreatePlayerTeam(ctx, teamId, &request)
+}
+
+// GetListTeamPlayer
+//
+//	@Summary		Get List Team Player
+//	@Description	Get List Team Player
+//	@Tags			Teams
+//	@Accept			json
+//	@Produce		json
+//
+//	@Param			teamId	path		string	true	"Team ID"
+//
+//	@Success		200		{object}	api.WebResponse[[]dto.GetListPlayerItem]
+//	@Failure		400		{object}	api.WebResponse[any]
+//	@Failure		500		{object}	api.WebResponse[any]
+//	@Router			/api/v1/teams/{teamId}/players [get]
+func (c *teamsController) GetListTeamPlayer(g *gin.Context) api.WebResponse[[]dto.GetListPlayerItem] {
+	l := logger.LoggerNew()
+	ctx := g.Request.Context()
+
+	l.WithContext(ctx).Debug("[GetListTeamPlayer].ctrl: Started").Msg()
+	teamId := g.Param("teamId")
+	return c.teamsService.GetListPlayerTeam(ctx, teamId)
+}
+
+// GetTeamDetail
+//
+//	@Summary		Get Detail Team
+//	@Description	Get Detail Team
+//	@Tags			Teams
+//	@Accept			json
+//	@Produce		json
+//
+//	@Param			teamId	path		string	true	"Team ID"
+//
+//	@Success		200		{object}	api.WebResponse[dto.GetTeamDetail]
+//	@Failure		400		{object}	api.WebResponse[any]
+//	@Failure		500		{object}	api.WebResponse[any]
+//	@Router			/api/v1/teams/{teamId} [get]
+func (c *teamsController) GetTeamDetail(g *gin.Context) api.WebResponse[*dto.GetTeamDetail] {
+	l := logger.LoggerNew()
+	ctx := g.Request.Context()
+
+	l.WithContext(ctx).Debug("[GetTeamDetail].ctrl: Started").Msg()
+	teamId := g.Param("teamId")
+	return c.teamsService.GetTeamDetail(ctx, teamId)
+}
+
+// UpdateTeam
+//
+//	@Summary		Update Team Data
+//	@Description	Update Team Data
+//	@Tags			Teams
+//	@Accept			json
+//	@Produce		json
+//	@Param			teamId	path		string					true	"Team ID"
+//	@Param			request	body		dto.UpdateTeamRequest	true	"Update team request"
+//	@Success		201		{object}	api.WebResponse[dto.GetTeamDetail]
+//	@Failure		400		{object}	api.WebResponse[any]
+//	@Failure		500		{object}	api.WebResponse[any]
+//	@Router			/api/v1/teams/{teamId} [put]
+func (c *teamsController) UpdateTeam(g *gin.Context) api.WebResponse[*dto.GetTeamDetail] {
+	l := logger.LoggerNew()
+	ctx := g.Request.Context()
+
+	l.WithContext(ctx).Debug("[UpdateTeam].ctrl: Started").Msg()
+
+	var request dto.UpdateTeamRequest
+	if err := g.ShouldBindBodyWithJSON(&request); err != nil {
+		l.WithContext(ctx).Error("error when read request").Attr("error", err).Msg()
+		return api.ErrorResponse[*dto.GetTeamDetail](
+			ctx,
+			constants.BadRequestDefault.GetMessage(),
+			constants.BadRequestDefault.GetCode(),
+			constants.BadRequestDefault.GetHttpCode(),
+			nil,
+		)
+	}
+
+	teamId := g.Param("teamId")
+	return c.teamsService.UpdateTeamData(ctx, teamId, &request)
 }

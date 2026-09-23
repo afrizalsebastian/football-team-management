@@ -67,3 +67,30 @@ func (s *HttpServer) CreateTeamPlayer(c *gin.Context) {
 	resp := s.TeamsController.CreateTeamPlayer(c)
 	api.WriteJSONResponse(c, resp.HttpCode, resp)
 }
+
+func (s *HttpServer) GetListTeamPlayer(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 30*time.Second)
+	defer cancel()
+
+	c.Request = c.Request.WithContext(ctx)
+	resp := s.TeamsController.GetListTeamPlayer(c)
+	api.WriteJSONResponse(c, resp.HttpCode, resp)
+}
+
+func (s *HttpServer) GetTeamDetail(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 30*time.Second)
+	defer cancel()
+
+	c.Request = c.Request.WithContext(ctx)
+	resp := s.TeamsController.GetTeamDetail(c)
+	api.WriteJSONResponse(c, resp.HttpCode, resp)
+}
+
+func (s *HttpServer) UpdateTeam(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 30*time.Second)
+	defer cancel()
+
+	c.Request = c.Request.WithContext(ctx)
+	resp := s.TeamsController.UpdateTeam(c)
+	api.WriteJSONResponse(c, resp.HttpCode, resp)
+}

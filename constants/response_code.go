@@ -43,6 +43,9 @@ var (
 	BadRequestDefault   = registerResponseCode("Bad request", 400000, http.StatusBadRequest)
 	InvalidJerseyNumber = registerResponseCode("Jersery number already used by active player", 400001, http.StatusBadRequest)
 
+	NotFoundDefault = registerResponseCode("Not Found", 404000, http.StatusNotFound)
+	NotFoundTeam    = registerResponseCode("Not Found Team", 404001, http.StatusNotFound)
+
 	// 5XX
 	InternalServerError = registerResponseCode("Internal Server Error", 500000, http.StatusInternalServerError)
 )

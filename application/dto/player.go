@@ -14,6 +14,19 @@ type CreatePlayerTeamResponse struct {
 	Name         string  `json:"name"`
 	Height       float64 `json:"height"`
 	Weight       float64 `json:"weight"`
-	Position     string  `json:"Position"`
+	Position     string  `json:"position"`
 	JerseyNumber int     `json:"jersey_number"`
+}
+
+type PlayerPosition struct {
+	Code  string `json:"code"`
+	Title string `json:"title"`
+}
+
+type GetListPlayerItem struct {
+	Id           string         `json:"id"`
+	TeamId       string         `json:"team_id"`
+	Name         string         `json:"name"`
+	Position     PlayerPosition `json:"position"`
+	JerseyNumber int            `json:"jersey_number"`
 }

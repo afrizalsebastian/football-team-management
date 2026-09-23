@@ -26,6 +26,27 @@ definitions:
       message_id:
         type: string
     type: object
+  api.WebResponse-array_dto_GetListPlayerItem:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/dto.GetListPlayerItem'
+        type: array
+      error_message:
+        type: string
+      errors_detail:
+        items:
+          $ref: '#/definitions/api.ErrorsDetail'
+        type: array
+      http_code:
+        type: integer
+      message:
+        type: string
+      message_code:
+        type: integer
+      message_id:
+        type: string
+    type: object
   api.WebResponse-array_dto_GetListTeamItem:
     properties:
       data:
@@ -85,6 +106,25 @@ definitions:
       message_id:
         type: string
     type: object
+  api.WebResponse-dto_GetTeamDetail:
+    properties:
+      data:
+        $ref: '#/definitions/dto.GetTeamDetail'
+      error_message:
+        type: string
+      errors_detail:
+        items:
+          $ref: '#/definitions/api.ErrorsDetail'
+        type: array
+      http_code:
+        type: integer
+      message:
+        type: string
+      message_code:
+        type: integer
+      message_id:
+        type: string
+    type: object
   dto.CreatePlayerTeamRequest:
     properties:
       Position:
@@ -106,8 +146,6 @@ definitions:
     type: object
   dto.CreatePlayerTeamResponse:
     properties:
-      Position:
-        type: string
       height:
         type: number
       id:
@@ -115,6 +153,8 @@ definitions:
       jersey_number:
         type: integer
       name:
+        type: string
+      position:
         type: string
       team_id:
         type: string
@@ -155,11 +195,67 @@ definitions:
       name:
         type: string
     type: object
+  dto.GetListPlayerItem:
+    properties:
+      id:
+        type: string
+      jersey_number:
+        type: integer
+      name:
+        type: string
+      position:
+        $ref: '#/definitions/dto.PlayerPosition'
+      team_id:
+        type: string
+    type: object
   dto.GetListTeamItem:
     properties:
       founded_year:
         type: string
       id:
+        type: string
+      logo:
+        type: string
+      name:
+        type: string
+    type: object
+  dto.GetTeamDetail:
+    properties:
+      address:
+        type: string
+      city:
+        type: string
+      created_at:
+        type: string
+      deleted_at:
+        type: string
+      founded_year:
+        type: string
+      id:
+        type: string
+      is_deleted:
+        type: boolean
+      logo:
+        type: string
+      name:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  dto.PlayerPosition:
+    properties:
+      code:
+        type: string
+      title:
+        type: string
+    type: object
+  dto.UpdateTeamRequest:
+    properties:
+      address:
+        type: string
+      city:
+        type: string
+      founded_year:
         type: string
       logo:
         type: string
@@ -268,7 +364,97 @@ paths:
       summary: Delete team (soft-delete)
       tags:
       - Teams
+    get:
+      consumes:
+      - application/json
+      description: Get Detail Team
+      parameters:
+      - description: Team ID
+        in: path
+        name: teamId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.WebResponse-dto_GetTeamDetail'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.WebResponse-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.WebResponse-any'
+      summary: Get Detail Team
+      tags:
+      - Teams
+    put:
+      consumes:
+      - application/json
+      description: Update Team Data
+      parameters:
+      - description: Team ID
+        in: path
+        name: teamId
+        required: true
+        type: string
+      - description: Update team request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateTeamRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/api.WebResponse-dto_GetTeamDetail'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.WebResponse-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.WebResponse-any'
+      summary: Update Team Data
+      tags:
+      - Teams
   /api/v1/teams/{teamId}/players:
+    get:
+      consumes:
+      - application/json
+      description: Get List Team Player
+      parameters:
+      - description: Team ID
+        in: path
+        name: teamId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.WebResponse-array_dto_GetListPlayerItem'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.WebResponse-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.WebResponse-any'
+      summary: Get List Team Player
+      tags:
+      - Teams
     post:
       consumes:
       - application/json

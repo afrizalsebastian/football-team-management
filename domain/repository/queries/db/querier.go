@@ -11,10 +11,14 @@ import (
 )
 
 type Querier interface {
+	CheckTeamExisits(ctx context.Context, id pgtype.UUID) (pgtype.UUID, error)
 	CreatePlayerTeam(ctx context.Context, arg *CreatePlayerTeamParams) (pgtype.UUID, error)
 	CreateTeam(ctx context.Context, arg *CreateTeamParams) (pgtype.UUID, error)
+	GetListPlayerTeam(ctx context.Context, teamID pgtype.UUID) ([]*GetListPlayerTeamRow, error)
 	GetListTeams(ctx context.Context) ([]*GetListTeamsRow, error)
-	SoftDeleteTeams(ctx context.Context, id pgtype.UUID) error
+	GetTeamDetail(ctx context.Context, id pgtype.UUID) (*Team, error)
+	SoftDeleteTeams(ctx context.Context, id pgtype.UUID) (pgtype.UUID, error)
+	UpdateTeams(ctx context.Context, arg *UpdateTeamsParams) (*Team, error)
 }
 
 var _ Querier = (*Queries)(nil)

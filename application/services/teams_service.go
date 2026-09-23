@@ -16,8 +16,11 @@ import (
 type ITeamsService interface {
 	CreateTeam(ctx context.Context, request *dto.CreateTeamRequest) api.WebResponse[*dto.CreateTeamResponse]
 	GetListTeam(ctx context.Context) api.WebResponse[[]dto.GetListTeamItem]
+	GetTeamDetail(ctx context.Context, teamId string) api.WebResponse[*dto.GetTeamDetail]
 	SoftDeleteTeam(ctx context.Context, id string) api.WebResponse[any]
 	CreatePlayerTeam(ctx context.Context, teamId string, request *dto.CreatePlayerTeamRequest) api.WebResponse[*dto.CreatePlayerTeamResponse]
+	GetListPlayerTeam(ctx context.Context, teamId string) api.WebResponse[[]dto.GetListPlayerItem]
+	UpdateTeamData(ctx context.Context, teamId string, request *dto.UpdateTeamRequest) api.WebResponse[*dto.GetTeamDetail]
 }
 
 type teamsService struct {
@@ -95,7 +98,7 @@ func (s *teamsService) GetListTeam(ctx context.Context) api.WebResponse[[]dto.Ge
 	}
 
 	if len(teams) == 0 {
-		l.WithContext(ctx).Debug("empty teams data").Msg()
+		l.WithContext(ctx).Warn("empty teams data").Msg()
 		return api.SuccessResponse[[]dto.GetListTeamItem](
 			ctx,
 			constants.SuccesssWithEmptyList.GetMessage(),
@@ -130,23 +133,20 @@ func (s *teamsService) SoftDeleteTeam(ctx context.Context, id string) api.WebRes
 
 	l.WithContext(ctx).Debug("[SoftDeleteTeam].service: Started").Msg()
 	if err := s.teamsRepository.SoftDeleteTeam(ctx, id); err != nil {
-		l.WithContext(ctx).Debug("error when soft delete team").Attr("error", err).Msg()
+		l.WithContext(ctx).Error("error when soft delete team").Attr("error", err).Msg()
 
+		errMsg := constants.InternalServerError
 		if errors.Is(err, constants.InvalidUUIDValue) {
-			return api.ErrorResponse[any](
-				ctx,
-				constants.BadRequestDefault.GetMessage(),
-				constants.BadRequestDefault.GetCode(),
-				constants.BadRequestDefault.GetHttpCode(),
-				nil,
-			)
+			errMsg = constants.BadRequestDefault
 		}
-
+		if errors.Is(err, constants.ErrNotFoundRow) {
+			errMsg = constants.NotFoundDefault
+		}
 		return api.ErrorResponse[any](
 			ctx,
-			constants.InternalServerError.GetMessage(),
-			constants.InternalServerError.GetCode(),
-			constants.InternalServerError.GetHttpCode(),
+			errMsg.GetMessage(),
+			errMsg.GetCode(),
+			errMsg.GetHttpCode(),
 			nil,
 		)
 	}
@@ -165,6 +165,17 @@ func (s *teamsService) CreatePlayerTeam(ctx context.Context, teamId string, requ
 	l := logger.LoggerNew()
 
 	l.WithContext(ctx).Debug("[CreatePlayerTeam].service: Started").Msg()
+	if found := s.teamsRepository.IsTeamExists(ctx, teamId); !found {
+		l.WithContext(ctx).Warn("not found team").Msg()
+		return api.ErrorResponse[*dto.CreatePlayerTeamResponse](
+			ctx,
+			constants.NotFoundTeam.GetMessage(),
+			constants.NotFoundTeam.GetCode(),
+			constants.NotFoundTeam.GetHttpCode(),
+			nil,
+		)
+	}
+
 	player := &dao.Players{
 		TeamId:       teamId,
 		Name:         helper.StringPtr(request.Name),
@@ -175,32 +186,22 @@ func (s *teamsService) CreatePlayerTeam(ctx context.Context, teamId string, requ
 	}
 
 	if err := s.playerRepository.CreateTeamPlayer(ctx, player); err != nil {
-		l.WithContext(ctx).Debug("error when create team player").Attr("error", err).Msg()
+		l.WithContext(ctx).Error("error when create team player").Attr("error", err).Msg()
+
+		errMsg := constants.InternalServerError
 		if errors.Is(err, constants.InvalidUUIDValue) || errors.Is(err, constants.InvalidFieldValue) {
-			return api.ErrorResponse[*dto.CreatePlayerTeamResponse](
-				ctx,
-				constants.BadRequestDefault.GetMessage(),
-				constants.BadRequestDefault.GetCode(),
-				constants.BadRequestDefault.GetHttpCode(),
-				nil,
-			)
+			errMsg = constants.BadRequestDefault
 		}
 
 		if errors.Is(err, constants.DuplicateRow) {
-			return api.ErrorResponse[*dto.CreatePlayerTeamResponse](
-				ctx,
-				constants.InvalidJerseyNumber.GetMessage(),
-				constants.InvalidJerseyNumber.GetCode(),
-				constants.InvalidJerseyNumber.GetHttpCode(),
-				nil,
-			)
+			errMsg = constants.InvalidJerseyNumber
 		}
 
 		return api.ErrorResponse[*dto.CreatePlayerTeamResponse](
 			ctx,
-			constants.InternalServerError.GetMessage(),
-			constants.InternalServerError.GetCode(),
-			constants.InternalServerError.GetHttpCode(),
+			errMsg.GetMessage(),
+			errMsg.GetCode(),
+			errMsg.GetHttpCode(),
 			nil,
 		)
 	}
@@ -219,6 +220,181 @@ func (s *teamsService) CreatePlayerTeam(ctx context.Context, teamId string, requ
 		constants.CreatedDefault.GetMessage(),
 		constants.CreatedDefault.GetCode(),
 		constants.CreatedDefault.GetHttpCode(),
+		response,
+	)
+}
+
+func (s *teamsService) GetListPlayerTeam(ctx context.Context, teamId string) api.WebResponse[[]dto.GetListPlayerItem] {
+	l := logger.LoggerNew()
+
+	l.WithContext(ctx).Debug("[GetListPlayerTeam].service: Started").Msg()
+	if found := s.teamsRepository.IsTeamExists(ctx, teamId); !found {
+		l.WithContext(ctx).Warn("not found team").Msg()
+		return api.ErrorResponse[[]dto.GetListPlayerItem](
+			ctx,
+			constants.NotFoundTeam.GetMessage(),
+			constants.NotFoundTeam.GetCode(),
+			constants.NotFoundTeam.GetHttpCode(),
+			nil,
+		)
+	}
+
+	result, err := s.playerRepository.GetPlayerTeamByTeamId(ctx, teamId)
+	if err != nil {
+		l.WithContext(ctx).Error("error when get team player").Attr("error", err).Attr("team_id", teamId).Msg()
+		errMsg := constants.InternalServerError
+		if errors.Is(err, constants.InvalidUUIDValue) {
+			errMsg = constants.BadRequestDefault
+		}
+		return api.ErrorResponse[[]dto.GetListPlayerItem](
+			ctx,
+			errMsg.GetMessage(),
+			errMsg.GetCode(),
+			errMsg.GetHttpCode(),
+			nil,
+		)
+	}
+
+	if len(result) == 0 {
+		l.WithContext(ctx).Debug("empty teams data").Msg()
+		return api.SuccessResponse[[]dto.GetListPlayerItem](
+			ctx,
+			constants.SuccesssWithEmptyList.GetMessage(),
+			constants.SuccesssWithEmptyList.GetCode(),
+			constants.SuccesssWithEmptyList.GetHttpCode(),
+			nil,
+		)
+	}
+
+	response := make([]dto.GetListPlayerItem, 0)
+	for _, r := range result {
+		var positionCode, positionTitle string
+		position := constants.DictPlayerPosition.GetValue(helper.GetStringPtrValue(r.Position))
+		if position != nil {
+			positionCode, positionTitle = position.Code, position.Title
+		}
+
+		response = append(response, dto.GetListPlayerItem{
+			Id:     r.Id,
+			TeamId: r.TeamId,
+			Name:   helper.GetStringPtrValue(r.Name),
+			Position: dto.PlayerPosition{
+				Code:  positionCode,
+				Title: positionTitle,
+			},
+			JerseyNumber: helper.GetIntPtrValue(r.JerseyNumber),
+		})
+	}
+
+	l.WithContext(ctx).Debug("[GetListPlayerTeam].service: Completed").Msg()
+	return api.SuccessResponse(
+		ctx,
+		constants.SuccesssWithEmptyList.GetMessage(),
+		constants.SuccesssWithEmptyList.GetCode(),
+		constants.SuccesssWithEmptyList.GetHttpCode(),
+		response,
+	)
+}
+
+func (s *teamsService) GetTeamDetail(ctx context.Context, teamId string) api.WebResponse[*dto.GetTeamDetail] {
+	l := logger.LoggerNew()
+
+	l.WithContext(ctx).Debug("[GetTeamDetail].service: Started").Msg()
+	result, err := s.teamsRepository.GetTeamDetail(ctx, teamId)
+	if err != nil {
+		l.WithContext(ctx).Error("error when get team detail").Attr("error", err).Attr("team_id", teamId).Msg()
+
+		errMsg := constants.InternalServerError
+		if errors.Is(err, constants.InvalidUUIDValue) {
+			errMsg = constants.BadRequestDefault
+		}
+		if errors.Is(err, constants.ErrNotFoundRow) {
+			errMsg = constants.NotFoundDefault
+		}
+		return api.ErrorResponse[*dto.GetTeamDetail](
+			ctx,
+			errMsg.GetMessage(),
+			errMsg.GetCode(),
+			errMsg.GetHttpCode(),
+			nil,
+		)
+	}
+
+	response := &dto.GetTeamDetail{
+		Id:          result.Id,
+		Name:        helper.GetStringPtrValue(result.Name),
+		Logo:        helper.GetStringPtrValue(result.Logo),
+		Address:     helper.GetStringPtrValue(result.Address),
+		City:        helper.GetStringPtrValue(result.City),
+		FoundedYear: helper.GetStringPtrValue(result.FoundedYear),
+		CreatedAt:   result.CreatedAt,
+		UpdatedAt:   result.UpdatedAt,
+		IsDeleted:   result.IsDeleted,
+		DeletedAt:   result.DeletedAt,
+	}
+
+	l.WithContext(ctx).Debug("[GetTeamDetail].service: Completed").Msg()
+	return api.SuccessResponse(
+		ctx,
+		constants.SuccesssWithEmptyList.GetMessage(),
+		constants.SuccesssWithEmptyList.GetCode(),
+		constants.SuccesssWithEmptyList.GetHttpCode(),
+		response,
+	)
+}
+
+func (s *teamsService) UpdateTeamData(ctx context.Context, teamId string, request *dto.UpdateTeamRequest) api.WebResponse[*dto.GetTeamDetail] {
+	l := logger.LoggerNew()
+
+	l.WithContext(ctx).Debug("[UpdateTeamData].service: Started").Msg()
+	team := &dao.Teams{
+		Id:          teamId,
+		Name:        request.Name,
+		Logo:        request.Logo,
+		FoundedYear: request.FoundedYear,
+		Address:     request.Address,
+		City:        request.City,
+	}
+
+	if err := s.teamsRepository.UpdatePartialTeam(ctx, team); err != nil {
+		l.WithContext(ctx).Error("error when update team data").
+			Attr("error", err).Attr("team_id", teamId).Msg()
+
+		errMsg := constants.InternalServerError
+		if errors.Is(err, constants.InvalidUUIDValue) {
+			errMsg = constants.BadRequestDefault
+		}
+		if errors.Is(err, constants.ErrNotFoundRow) {
+			errMsg = constants.NotFoundDefault
+		}
+		return api.ErrorResponse[*dto.GetTeamDetail](
+			ctx,
+			errMsg.GetMessage(),
+			errMsg.GetCode(),
+			errMsg.GetHttpCode(),
+			nil,
+		)
+	}
+
+	response := &dto.GetTeamDetail{
+		Id:          team.Id,
+		Name:        helper.GetStringPtrValue(team.Name),
+		Logo:        helper.GetStringPtrValue(team.Logo),
+		Address:     helper.GetStringPtrValue(team.Address),
+		City:        helper.GetStringPtrValue(team.City),
+		FoundedYear: helper.GetStringPtrValue(team.FoundedYear),
+		CreatedAt:   team.CreatedAt,
+		UpdatedAt:   team.UpdatedAt,
+		IsDeleted:   team.IsDeleted,
+		DeletedAt:   team.DeletedAt,
+	}
+
+	l.WithContext(ctx).Debug("[UpdateTeamData].service: Completed").Msg()
+	return api.SuccessResponse(
+		ctx,
+		constants.SuccessDefault.GetMessage(),
+		constants.SuccessDefault.GetCode(),
+		constants.SuccessDefault.GetHttpCode(),
 		response,
 	)
 }

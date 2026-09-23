@@ -11,6 +11,17 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const checkTeamExisits = `-- name: CheckTeamExisits :one
+SELECT id from teams WHERE id = $1
+`
+
+func (q *Queries) CheckTeamExisits(ctx context.Context, id pgtype.UUID) (pgtype.UUID, error) {
+	row := q.db.QueryRow(ctx, checkTeamExisits, id)
+	var id_2 pgtype.UUID
+	err := row.Scan(&id_2)
+	return id_2, err
+}
+
 const createPlayerTeam = `-- name: CreatePlayerTeam :one
 INSERT INTO players (
   team_id, name, height_cm, weight_kg, position, jersey_number
@@ -71,6 +82,47 @@ func (q *Queries) CreateTeam(ctx context.Context, arg *CreateTeamParams) (pgtype
 	return id, err
 }
 
+const getListPlayerTeam = `-- name: GetListPlayerTeam :many
+SELECT id, team_id, name, position, jersey_number
+FROM players
+WHERE team_id = $1
+ORDER BY jersey_number ASC
+`
+
+type GetListPlayerTeamRow struct {
+	ID           pgtype.UUID    `json:"id"`
+	TeamID       pgtype.UUID    `json:"team_id"`
+	Name         string         `json:"name"`
+	Position     PlayerPosition `json:"position"`
+	JerseyNumber int16          `json:"jersey_number"`
+}
+
+func (q *Queries) GetListPlayerTeam(ctx context.Context, teamID pgtype.UUID) ([]*GetListPlayerTeamRow, error) {
+	rows, err := q.db.Query(ctx, getListPlayerTeam, teamID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []*GetListPlayerTeamRow{}
+	for rows.Next() {
+		var i GetListPlayerTeamRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.TeamID,
+			&i.Name,
+			&i.Position,
+			&i.JerseyNumber,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getListTeams = `-- name: GetListTeams :many
 SELECT id, name, logo, founded_year
 FROM teams
@@ -109,14 +161,87 @@ func (q *Queries) GetListTeams(ctx context.Context) ([]*GetListTeamsRow, error) 
 	return items, nil
 }
 
-const softDeleteTeams = `-- name: SoftDeleteTeams :exec
+const getTeamDetail = `-- name: GetTeamDetail :one
+SELECT id, name, logo, founded_year, address, city, created_at, updated_at, is_deleted, deleted_at FROM teams
+WHERE id = $1
+`
+
+func (q *Queries) GetTeamDetail(ctx context.Context, id pgtype.UUID) (*Team, error) {
+	row := q.db.QueryRow(ctx, getTeamDetail, id)
+	var i Team
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Logo,
+		&i.FoundedYear,
+		&i.Address,
+		&i.City,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.IsDeleted,
+		&i.DeletedAt,
+	)
+	return &i, err
+}
+
+const softDeleteTeams = `-- name: SoftDeleteTeams :one
 UPDATE teams
 SET is_deleted = true,
   deleted_at = now()
 WHERE id = $1
+RETURNING id
 `
 
-func (q *Queries) SoftDeleteTeams(ctx context.Context, id pgtype.UUID) error {
-	_, err := q.db.Exec(ctx, softDeleteTeams, id)
-	return err
+func (q *Queries) SoftDeleteTeams(ctx context.Context, id pgtype.UUID) (pgtype.UUID, error) {
+	row := q.db.QueryRow(ctx, softDeleteTeams, id)
+	var id_2 pgtype.UUID
+	err := row.Scan(&id_2)
+	return id_2, err
+}
+
+const updateTeams = `-- name: UpdateTeams :one
+UPDATE teams
+SET 
+  name = COALESCE($1, name),
+  logo = COALESCE($2, logo),
+  founded_year = COALESCE($3, founded_year),
+  address = COALESCE($4, address),
+  city = COALESCE($5, city),
+  updated_at = now()
+WHERE id = $6
+RETURNING id, name, logo, founded_year, address, city, created_at, updated_at, is_deleted, deleted_at
+`
+
+type UpdateTeamsParams struct {
+	Name        pgtype.Text `json:"name"`
+	Logo        pgtype.Text `json:"logo"`
+	FoundedYear pgtype.Text `json:"founded_year"`
+	Address     pgtype.Text `json:"address"`
+	City        pgtype.Text `json:"city"`
+	ID          pgtype.UUID `json:"id"`
+}
+
+func (q *Queries) UpdateTeams(ctx context.Context, arg *UpdateTeamsParams) (*Team, error) {
+	row := q.db.QueryRow(ctx, updateTeams,
+		arg.Name,
+		arg.Logo,
+		arg.FoundedYear,
+		arg.Address,
+		arg.City,
+		arg.ID,
+	)
+	var i Team
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Logo,
+		&i.FoundedYear,
+		&i.Address,
+		&i.City,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.IsDeleted,
+		&i.DeletedAt,
+	)
+	return &i, err
 }

@@ -1,5 +1,7 @@
 package dto
 
+import "time"
+
 type CreateTeamRequest struct {
 	Name        string `json:"name" validate:"required"`
 	Logo        string `json:"logo" validate:"required"`
@@ -22,4 +24,25 @@ type GetListTeamItem struct {
 	Name        string `json:"name"`
 	Logo        string `json:"logo"`
 	FoundedYear string `json:"founded_year"`
+}
+
+type GetTeamDetail struct {
+	Id          string    `json:"id"`
+	Name        string    `json:"name"`
+	Logo        string    `json:"logo"`
+	FoundedYear string    `json:"founded_year"`
+	Address     string    `json:"address"`
+	City        string    `json:"city"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
+	IsDeleted   bool      `json:"is_deleted"`
+	DeletedAt   time.Time `json:"deleted_at"`
+}
+
+type UpdateTeamRequest struct {
+	Name        *string `json:"name"`
+	Logo        *string `json:"logo"`
+	FoundedYear *string `json:"founded_year"`
+	Address     *string `json:"address"`
+	City        *string `json:"city"`
 }

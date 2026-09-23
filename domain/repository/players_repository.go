@@ -15,6 +15,7 @@ import (
 
 type IPlayersRepository interface {
 	CreateTeamPlayer(ctx context.Context, player *dao.Players) error
+	GetPlayerTeamByTeamId(ctx context.Context, teamId string) ([]dao.Players, error)
 }
 
 type playerRepository struct {
@@ -77,4 +78,43 @@ func (d *playerRepository) CreateTeamPlayer(ctx context.Context, player *dao.Pla
 	player.Id = result.String()
 	l.WithContext(ctx).Debug("[CreateTeamPlayer].domain: Completed").Msg()
 	return nil
+}
+
+func (d *playerRepository) GetPlayerTeamByTeamId(ctx context.Context, teamIdStr string) ([]dao.Players, error) {
+	l := logger.LoggerNew()
+
+	l.WithContext(ctx).Debug("[GetPlayerTeamByTeamId].domain: Started").Msg()
+
+	var teamId pgtype.UUID
+	if err := teamId.Scan(teamIdStr); err != nil {
+		return nil, constants.InvalidUUIDValue
+	}
+
+	rows, err := d.db.GetListPlayerTeam(ctx, teamId)
+	if err != nil {
+		l.WithContext(ctx).
+			Error("Error when get list team player").
+			Attr("error", err).
+			Attr("team_id", teamIdStr).
+			Msg()
+
+		return nil, err
+	}
+
+	result := make([]dao.Players, 0)
+	for _, r := range rows {
+		if r == nil {
+			continue
+		}
+
+		result = append(result, dao.Players{
+			Id:           r.ID.String(),
+			TeamId:       r.TeamID.String(),
+			Name:         helper.StringPtr(r.Name),
+			Position:     helper.StringPtr(string(r.Position)),
+			JerseyNumber: helper.IntPtr(int(r.JerseyNumber)),
+		})
+	}
+
+	return result, nil
 }
