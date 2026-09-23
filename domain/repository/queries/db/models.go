@@ -55,6 +55,18 @@ func (ns NullPlayerPosition) Value() (driver.Value, error) {
 	return string(ns.PlayerPosition), nil
 }
 
+type Match struct {
+	ID         pgtype.UUID        `json:"id"`
+	MatchDate  pgtype.Date        `json:"match_date"`
+	MatchTime  pgtype.Time        `json:"match_time"`
+	HomeTeamID pgtype.UUID        `json:"home_team_id"`
+	AwayTeamID pgtype.UUID        `json:"away_team_id"`
+	CreatedAt  pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt  pgtype.Timestamptz `json:"updated_at"`
+	IsDeleted  pgtype.Bool        `json:"is_deleted"`
+	DeletedAt  pgtype.Timestamptz `json:"deleted_at"`
+}
+
 type Player struct {
 	ID           pgtype.UUID        `json:"id"`
 	TeamID       pgtype.UUID        `json:"team_id"`

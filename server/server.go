@@ -14,6 +14,7 @@ type HttpServer struct {
 	HelloController  controllers.IHelloController
 	TeamsController  controllers.ITeamsController
 	PlayerController controllers.IPlayersController
+	MatchController  controllers.IMatchController
 }
 
 func NewServer(app *bootstrap.FootballManagementApp) *HttpServer {
@@ -22,6 +23,7 @@ func NewServer(app *bootstrap.FootballManagementApp) *HttpServer {
 		HelloController:  di.HelloController,
 		TeamsController:  di.TeamsController,
 		PlayerController: di.PlayerController,
+		MatchController:  di.MatchController,
 	}
 }
 
@@ -112,5 +114,14 @@ func (s *HttpServer) UpdatePlayer(c *gin.Context) {
 
 	c.Request = c.Request.WithContext(ctx)
 	resp := s.PlayerController.UpdatePlayer(c)
+	api.WriteJSONResponse(c, resp.HttpCode, resp)
+}
+
+func (s *HttpServer) CreateMatch(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 30*time.Second)
+	defer cancel()
+
+	c.Request = c.Request.WithContext(ctx)
+	resp := s.MatchController.CreateMatch(c)
 	api.WriteJSONResponse(c, resp.HttpCode, resp)
 }

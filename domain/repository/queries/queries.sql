@@ -73,3 +73,10 @@ SET
   updated_at = now()
 WHERE id = @id
 RETURNING *;
+
+-- name: CreateMatches :one
+INSERT INTO matches(
+  match_date, match_time, home_team_id, away_team_id
+) VALUES (
+  @match_date, @match_time, @home_team_id, @away_team_id
+) RETURNING id;

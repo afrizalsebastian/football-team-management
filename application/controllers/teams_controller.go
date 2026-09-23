@@ -37,7 +37,7 @@ func NewTeamsController(teamsService services.ITeamsService) ITeamsController {
 //	@Tags			Teams
 //	@Accept			json
 //	@Produce		json
-//	@Param			request	body		dto.CreateTeamRequest	true	"Create team bory request"
+//	@Param			request	body		dto.CreateTeamRequest	true	"Create team body request"
 //	@Success		201		{object}	api.WebResponse[dto.CreateTeamResponse]
 //	@Failure		400		{object}	api.WebResponse[any]
 //	@Failure		500		{object}	api.WebResponse[any]

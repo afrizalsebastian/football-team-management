@@ -89,6 +89,25 @@ definitions:
       message_id:
         type: string
     type: object
+  api.WebResponse-dto_CreateMatchResponse:
+    properties:
+      data:
+        $ref: '#/definitions/dto.CreateMatchResponse'
+      error_message:
+        type: string
+      errors_detail:
+        items:
+          $ref: '#/definitions/api.ErrorsDetail'
+        type: array
+      http_code:
+        type: integer
+      message:
+        type: string
+      message_code:
+        type: integer
+      message_id:
+        type: string
+    type: object
   api.WebResponse-dto_CreatePlayerTeamResponse:
     properties:
       data:
@@ -163,6 +182,35 @@ definitions:
       message_code:
         type: integer
       message_id:
+        type: string
+    type: object
+  dto.CreateMatchRequest:
+    properties:
+      away_team_id:
+        type: string
+      date:
+        type: string
+      home_team_id:
+        type: string
+      time:
+        type: string
+    required:
+    - away_team_id
+    - date
+    - home_team_id
+    - time
+    type: object
+  dto.CreateMatchResponse:
+    properties:
+      away_team_id:
+        type: string
+      date:
+        type: string
+      home_team_id:
+        type: string
+      id:
+        type: string
+      time:
         type: string
     type: object
   dto.CreatePlayerTeamRequest:
@@ -389,6 +437,36 @@ paths:
       summary: Example API -- Hello
       tags:
       - Example
+  /api/v1/matches:
+    post:
+      consumes:
+      - application/json
+      description: Create a new match
+      parameters:
+      - description: Create match body request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateMatchRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/api.WebResponse-dto_CreateMatchResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.WebResponse-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.WebResponse-any'
+      summary: Create Match
+      tags:
+      - Matches
   /api/v1/players:
     get:
       consumes:
@@ -467,7 +545,7 @@ paths:
       - application/json
       description: Create a new team
       parameters:
-      - description: Create team bory request
+      - description: Create team body request
         in: body
         name: request
         required: true

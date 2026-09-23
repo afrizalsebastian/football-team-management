@@ -22,6 +22,33 @@ func (q *Queries) CheckTeamExisits(ctx context.Context, id pgtype.UUID) (pgtype.
 	return id_2, err
 }
 
+const createMatches = `-- name: CreateMatches :one
+INSERT INTO matches(
+  match_date, match_time, home_team_id, away_team_id
+) VALUES (
+  $1, $2, $3, $4
+) RETURNING id
+`
+
+type CreateMatchesParams struct {
+	MatchDate  pgtype.Date `json:"match_date"`
+	MatchTime  pgtype.Time `json:"match_time"`
+	HomeTeamID pgtype.UUID `json:"home_team_id"`
+	AwayTeamID pgtype.UUID `json:"away_team_id"`
+}
+
+func (q *Queries) CreateMatches(ctx context.Context, arg *CreateMatchesParams) (pgtype.UUID, error) {
+	row := q.db.QueryRow(ctx, createMatches,
+		arg.MatchDate,
+		arg.MatchTime,
+		arg.HomeTeamID,
+		arg.AwayTeamID,
+	)
+	var id pgtype.UUID
+	err := row.Scan(&id)
+	return id, err
+}
+
 const createPlayerTeam = `-- name: CreatePlayerTeam :one
 INSERT INTO players (
   team_id, name, height_cm, weight_kg, position, jersey_number

@@ -2,6 +2,7 @@ package repository
 
 import (
 	"errors"
+	"time"
 
 	"github.com/afrizalsebastian/football-team-management/domain/repository/queries/db"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -64,4 +65,72 @@ func PositionToNullPlayerPosition(p string) db.NullPlayerPosition {
 	}
 
 	return db.NullPlayerPosition{PlayerPosition: db.PlayerPosition(p), Valid: true}
+}
+
+func DateStrPtrToPgtypeDate(s *string) pgtype.Date {
+	if s == nil {
+		return pgtype.Date{Valid: false}
+	}
+
+	t, err := time.Parse("02-01-2006", *s)
+	if err != nil {
+		return pgtype.Date{Valid: false}
+	}
+
+	return pgtype.Date{
+		Time:  t,
+		Valid: true,
+	}
+}
+
+func DateStrToPgtypeDate(s string) pgtype.Date {
+	if s == "" {
+		return pgtype.Date{Valid: false}
+	}
+
+	t, err := time.Parse("02-01-2006", s)
+	if err != nil {
+		return pgtype.Date{Valid: false}
+	}
+
+	return pgtype.Date{
+		Time:  t,
+		Valid: true,
+	}
+}
+
+func TimeStrPtrToPgtypeDate(s *string) pgtype.Time {
+	if s == nil {
+		return pgtype.Time{Valid: false}
+	}
+
+	t, err := time.Parse("15:04", *s)
+	if err != nil {
+		return pgtype.Time{Valid: false}
+	}
+
+	duration := time.Duration(t.Hour())*time.Hour + time.Duration(t.Minute())*time.Minute
+	microseconds := int64(duration / time.Microsecond)
+	return pgtype.Time{
+		Microseconds: microseconds,
+		Valid:        true,
+	}
+}
+
+func TimeStrToPgtypeDate(s string) pgtype.Time {
+	if s == "" {
+		return pgtype.Time{Valid: false}
+	}
+
+	t, err := time.Parse("15:04", s)
+	if err != nil {
+		return pgtype.Time{Valid: false}
+	}
+
+	duration := time.Duration(t.Hour())*time.Hour + time.Duration(t.Minute())*time.Minute
+	microseconds := int64(duration / time.Microsecond)
+	return pgtype.Time{
+		Microseconds: microseconds,
+		Valid:        true,
+	}
 }

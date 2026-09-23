@@ -12,6 +12,7 @@ import (
 
 type Querier interface {
 	CheckTeamExisits(ctx context.Context, id pgtype.UUID) (pgtype.UUID, error)
+	CreateMatches(ctx context.Context, arg *CreateMatchesParams) (pgtype.UUID, error)
 	CreatePlayerTeam(ctx context.Context, arg *CreatePlayerTeamParams) (pgtype.UUID, error)
 	CreateTeam(ctx context.Context, arg *CreateTeamParams) (pgtype.UUID, error)
 	GetListPlayer(ctx context.Context) ([]*GetListPlayerRow, error)

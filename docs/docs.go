@@ -42,6 +42,52 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/matches": {
+            "post": {
+                "description": "Create a new match",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Matches"
+                ],
+                "summary": "Create Match",
+                "parameters": [
+                    {
+                        "description": "Create match body request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreateMatchRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/api.WebResponse-dto_CreateMatchResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.WebResponse-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.WebResponse-any"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/players": {
             "get": {
                 "description": "Get List Player",
@@ -166,7 +212,7 @@ const docTemplate = `{
                 "summary": "Create Team",
                 "parameters": [
                     {
-                        "description": "Create team bory request",
+                        "description": "Create team body request",
                         "name": "request",
                         "in": "body",
                         "required": true,
@@ -568,6 +614,35 @@ const docTemplate = `{
                 }
             }
         },
+        "api.WebResponse-dto_CreateMatchResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/dto.CreateMatchResponse"
+                },
+                "error_message": {
+                    "type": "string"
+                },
+                "errors_detail": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api.ErrorsDetail"
+                    }
+                },
+                "http_code": {
+                    "type": "integer"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "message_code": {
+                    "type": "integer"
+                },
+                "message_id": {
+                    "type": "string"
+                }
+            }
+        },
         "api.WebResponse-dto_CreatePlayerTeamResponse": {
             "type": "object",
             "properties": {
@@ -680,6 +755,49 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "message_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.CreateMatchRequest": {
+            "type": "object",
+            "required": [
+                "away_team_id",
+                "date",
+                "home_team_id",
+                "time"
+            ],
+            "properties": {
+                "away_team_id": {
+                    "type": "string"
+                },
+                "date": {
+                    "type": "string"
+                },
+                "home_team_id": {
+                    "type": "string"
+                },
+                "time": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.CreateMatchResponse": {
+            "type": "object",
+            "properties": {
+                "away_team_id": {
+                    "type": "string"
+                },
+                "date": {
+                    "type": "string"
+                },
+                "home_team_id": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "time": {
                     "type": "string"
                 }
             }

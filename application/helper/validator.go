@@ -3,6 +3,7 @@ package helper
 import (
 	"context"
 	"regexp"
+	"time"
 
 	"github.com/afrizalsebastian/football-team-management/api"
 	"github.com/afrizalsebastian/football-team-management/constants"
@@ -15,13 +16,29 @@ func init() {
 	validate = validator.New()
 
 	// Register custom validation if needed
-	validate.RegisterValidation("alphanumeric", validateAlphanumeric)
+	validate.RegisterValidation("ddmmyyyy", validateDateFormat)
+	validate.RegisterValidation("hhmm", validateTimeFormat)
 }
 
-func validateAlphanumeric(fl validator.FieldLevel) bool {
+func validateDateFormat(fl validator.FieldLevel) bool {
 	field := fl.Field().String()
-	re := regexp.MustCompile("^[a-zA-Z0-9]+$")
-	return re.MatchString(field)
+	if field == "" {
+		return true
+	}
+	_, err := time.Parse("02-01-2006", field)
+	if err != nil {
+		return false
+	}
+	return true
+}
+
+func validateTimeFormat(fl validator.FieldLevel) bool {
+	field := fl.Field().String()
+	if field == "" {
+		return true
+	}
+	matched, _ := regexp.MatchString(`^([01]\d|2[0-3]):([0-5]\d)$`, field)
+	return matched
 }
 
 func getValidationErrorMessage(ctx context.Context, fe validator.FieldError) (int, string) {
@@ -49,6 +66,15 @@ func getValidationErrorMessage(ctx context.Context, fe validator.FieldError) (in
 	case "email":
 		errCode = constants.EmailValidationErr.GetCode()
 		validationErrMsg = constants.EmailValidationErr.GetMessageWithParam(fe.Field())
+	case "ddmmyyyy":
+		errCode = constants.DateValidationErr.GetCode()
+		validationErrMsg = constants.DateValidationErr.GetMessageWithParam(fe.Field())
+	case "hhmm":
+		errCode = constants.TimeValidationErr.GetCode()
+		validationErrMsg = constants.TimeValidationErr.GetMessageWithParam(fe.Field())
+	case "nefield":
+		errCode = constants.NotEqualFieldValidationErr.GetCode()
+		validationErrMsg = constants.NotEqualFieldValidationErr.GetMessageWithParam(fe.Field(), fe.Param())
 	default:
 		errCode = constants.DefaultValidationErr.GetCode()
 		validationErrMsg = constants.DefaultValidationErr.GetMessageWithParam(fe.Field())
