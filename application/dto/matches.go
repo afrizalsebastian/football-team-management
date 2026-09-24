@@ -14,3 +14,24 @@ type CreateMatchResponse struct {
 	Date       string `json:"date"`
 	Time       string `json:"time"`
 }
+
+type MatchTeam struct {
+	Id   string `json:"id"`
+	Name string `json:"name"`
+	Logo string `json:"logo"`
+}
+
+type GetMatchResponse struct {
+	Id         string    `json:"id"`
+	HomeTeamId string    `json:"home_team_id"`
+	AwayTeamId string    `json:"away_team_id"`
+	Date       string    `json:"date"`
+	Time       string    `json:"time"`
+	HomeTeam   MatchTeam `json:"home_team"`
+	AwayTeam   MatchTeam `json:"away_team"`
+}
+
+type RescheduleMatchRequest struct {
+	Date string `json:"date" validate:"required,ddmmyyyy"`
+	Time string `json:"time" validate:"required,hhmm"`
+}

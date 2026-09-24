@@ -109,6 +109,91 @@ func (q *Queries) CreateTeam(ctx context.Context, arg *CreateTeamParams) (pgtype
 	return id, err
 }
 
+const deleteMatch = `-- name: DeleteMatch :one
+UPDATE matches
+SET 
+  is_deleted = true,
+  deleted_at = now()
+WHERE id = $1 and is_deleted = false
+RETURNING id
+`
+
+func (q *Queries) DeleteMatch(ctx context.Context, id pgtype.UUID) (pgtype.UUID, error) {
+	row := q.db.QueryRow(ctx, deleteMatch, id)
+	var id_2 pgtype.UUID
+	err := row.Scan(&id_2)
+	return id_2, err
+}
+
+const getListMatch = `-- name: GetListMatch :many
+SELECT
+  m.id,
+  m.match_date,
+  m.match_time,
+  m.home_team_id,
+  m.away_team_id,
+  home.name as home_team_name,
+  home.logo as home_logo,
+  away.name as away_team_name,
+  away.logo as away_logo
+FROM matches m
+LEFT JOIN teams home ON m.home_team_id = home.id AND home.is_deleted = false
+LEFT JOIN teams away ON m.away_team_id = away.id AND away.is_deleted = false
+WHERE m.is_deleted = false
+  AND (
+    ($1::uuid IS NULL OR home_team_id = $1::uuid) OR 
+    ($2::uuid IS NULL OR away_team_id = $2::uuid)
+  )
+ORDER BY m.match_date ASC, m.match_time ASC
+`
+
+type GetListMatchParams struct {
+	HomeTeamID pgtype.UUID `json:"home_team_id"`
+	AwayTeamID pgtype.UUID `json:"away_team_id"`
+}
+
+type GetListMatchRow struct {
+	ID           pgtype.UUID `json:"id"`
+	MatchDate    pgtype.Date `json:"match_date"`
+	MatchTime    pgtype.Time `json:"match_time"`
+	HomeTeamID   pgtype.UUID `json:"home_team_id"`
+	AwayTeamID   pgtype.UUID `json:"away_team_id"`
+	HomeTeamName pgtype.Text `json:"home_team_name"`
+	HomeLogo     pgtype.Text `json:"home_logo"`
+	AwayTeamName pgtype.Text `json:"away_team_name"`
+	AwayLogo     pgtype.Text `json:"away_logo"`
+}
+
+func (q *Queries) GetListMatch(ctx context.Context, arg *GetListMatchParams) ([]*GetListMatchRow, error) {
+	rows, err := q.db.Query(ctx, getListMatch, arg.HomeTeamID, arg.AwayTeamID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []*GetListMatchRow{}
+	for rows.Next() {
+		var i GetListMatchRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.MatchDate,
+			&i.MatchTime,
+			&i.HomeTeamID,
+			&i.AwayTeamID,
+			&i.HomeTeamName,
+			&i.HomeLogo,
+			&i.AwayTeamName,
+			&i.AwayLogo,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getListPlayer = `-- name: GetListPlayer :many
 SELECT 
   p.id as id,
@@ -118,7 +203,8 @@ SELECT
   t.id as team_id,
   t.name as team_name
 FROM players p
-LEFT JOIN teams t ON p.team_id = t.id
+LEFT JOIN teams t ON p.team_id = t.id AND t.is_deleted = false
+WHERE p.is_deleted = false
 ORDER BY p.created_at ASC
 `
 
@@ -161,7 +247,7 @@ func (q *Queries) GetListPlayer(ctx context.Context) ([]*GetListPlayerRow, error
 const getListPlayerTeam = `-- name: GetListPlayerTeam :many
 SELECT id, team_id, name, position, jersey_number
 FROM players
-WHERE team_id = $1
+WHERE team_id = $1 AND is_deleted = false
 ORDER BY jersey_number ASC
 `
 
@@ -202,6 +288,7 @@ func (q *Queries) GetListPlayerTeam(ctx context.Context, teamID pgtype.UUID) ([]
 const getListTeams = `-- name: GetListTeams :many
 SELECT id, name, logo, founded_year
 FROM teams
+WHERE is_deleted = false
 ORDER BY founded_year DESC
 `
 
@@ -239,7 +326,7 @@ func (q *Queries) GetListTeams(ctx context.Context) ([]*GetListTeamsRow, error) 
 
 const getTeamDetail = `-- name: GetTeamDetail :one
 SELECT id, name, logo, founded_year, address, city, created_at, updated_at, is_deleted, deleted_at FROM teams
-WHERE id = $1
+WHERE id = $1 AND is_deleted = false
 `
 
 func (q *Queries) GetTeamDetail(ctx context.Context, id pgtype.UUID) (*Team, error) {
@@ -260,11 +347,34 @@ func (q *Queries) GetTeamDetail(ctx context.Context, id pgtype.UUID) (*Team, err
 	return &i, err
 }
 
+const rescheduleMatch = `-- name: RescheduleMatch :one
+UPDATE matches
+SET 
+  match_date = $1,
+  match_time = $2,
+  updated_at = now()
+WHERE id = $3 and is_deleted = false
+RETURNING id
+`
+
+type RescheduleMatchParams struct {
+	MatchDate pgtype.Date `json:"match_date"`
+	MatchTime pgtype.Time `json:"match_time"`
+	ID        pgtype.UUID `json:"id"`
+}
+
+func (q *Queries) RescheduleMatch(ctx context.Context, arg *RescheduleMatchParams) (pgtype.UUID, error) {
+	row := q.db.QueryRow(ctx, rescheduleMatch, arg.MatchDate, arg.MatchTime, arg.ID)
+	var id pgtype.UUID
+	err := row.Scan(&id)
+	return id, err
+}
+
 const softDeleteTeams = `-- name: SoftDeleteTeams :one
 UPDATE teams
 SET is_deleted = true,
   deleted_at = now()
-WHERE id = $1
+WHERE id = $1 AND is_deleted = false
 RETURNING id
 `
 
@@ -285,7 +395,7 @@ SET
   position = COALESCE($5, position),
   jersey_number = COALESCE($6, jersey_number),
   updated_at = now()
-WHERE id = $7
+WHERE id = $7 AND is_deleted = false
 RETURNING id, team_id, name, height_cm, weight_kg, position, jersey_number, created_at, updated_at, is_deleted, deleted_at
 `
 
@@ -335,7 +445,7 @@ SET
   address = COALESCE($4, address),
   city = COALESCE($5, city),
   updated_at = now()
-WHERE id = $6
+WHERE id = $6 AND is_deleted = false
 RETURNING id, name, logo, founded_year, address, city, created_at, updated_at, is_deleted, deleted_at
 `
 

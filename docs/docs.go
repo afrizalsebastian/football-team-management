@@ -43,6 +43,47 @@ const docTemplate = `{
             }
         },
         "/api/v1/matches": {
+            "get": {
+                "description": "Get List Matches",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Matches"
+                ],
+                "summary": "Get List Matches",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Team ID",
+                        "name": "teamId",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.WebResponse-array_dto_GetMatchResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.WebResponse-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.WebResponse-any"
+                        }
+                    }
+                }
+            },
             "post": {
                 "description": "Create a new match",
                 "consumes": [
@@ -71,6 +112,109 @@ const docTemplate = `{
                         "description": "Created",
                         "schema": {
                             "$ref": "#/definitions/api.WebResponse-dto_CreateMatchResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.WebResponse-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.WebResponse-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/matches/{matchId}": {
+            "delete": {
+                "description": "Delete Match",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Matches"
+                ],
+                "summary": "Delete Match",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Match ID",
+                        "name": "matchId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.WebResponse-any"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.WebResponse-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.WebResponse-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.WebResponse-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/matches/{matchId}/reschedule": {
+            "put": {
+                "description": "Reschedule match",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Matches"
+                ],
+                "summary": "Reschedule Match",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Match ID",
+                        "name": "matchId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Reschedule match request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.RescheduleMatchRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "202": {
+                        "description": "Accepted",
+                        "schema": {
+                            "$ref": "#/definitions/api.WebResponse-any"
                         }
                     },
                     "400": {
@@ -614,6 +758,38 @@ const docTemplate = `{
                 }
             }
         },
+        "api.WebResponse-array_dto_GetMatchResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.GetMatchResponse"
+                    }
+                },
+                "error_message": {
+                    "type": "string"
+                },
+                "errors_detail": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api.ErrorsDetail"
+                    }
+                },
+                "http_code": {
+                    "type": "integer"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "message_code": {
+                    "type": "integer"
+                },
+                "message_id": {
+                    "type": "string"
+                }
+            }
+        },
         "api.WebResponse-dto_CreateMatchResponse": {
             "type": "object",
             "properties": {
@@ -962,6 +1138,32 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.GetMatchResponse": {
+            "type": "object",
+            "properties": {
+                "away_team": {
+                    "$ref": "#/definitions/dto.MatchTeam"
+                },
+                "away_team_id": {
+                    "type": "string"
+                },
+                "date": {
+                    "type": "string"
+                },
+                "home_team": {
+                    "$ref": "#/definitions/dto.MatchTeam"
+                },
+                "home_team_id": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "time": {
+                    "type": "string"
+                }
+            }
+        },
         "dto.GetPlayerDetailResponse": {
             "type": "object",
             "properties": {
@@ -1049,6 +1251,20 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.MatchTeam": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "logo": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
         "dto.PlayerPosition": {
             "type": "object",
             "properties": {
@@ -1056,6 +1272,21 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.RescheduleMatchRequest": {
+            "type": "object",
+            "required": [
+                "date",
+                "time"
+            ],
+            "properties": {
+                "date": {
+                    "type": "string"
+                },
+                "time": {
                     "type": "string"
                 }
             }

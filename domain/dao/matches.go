@@ -12,4 +12,7 @@ type Matches struct {
 	UpdatedAt  time.Time
 	IsDeleted  bool
 	DeletedAt  time.Time
+
+	HomeTeam *Teams
+	AwayTeam *Teams
 }

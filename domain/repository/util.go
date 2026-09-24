@@ -2,6 +2,7 @@ package repository
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/afrizalsebastian/football-team-management/domain/repository/queries/db"
@@ -99,7 +100,7 @@ func DateStrToPgtypeDate(s string) pgtype.Date {
 	}
 }
 
-func TimeStrPtrToPgtypeDate(s *string) pgtype.Time {
+func TimeStrPtrToPgtypeTime(s *string) pgtype.Time {
 	if s == nil {
 		return pgtype.Time{Valid: false}
 	}
@@ -117,7 +118,7 @@ func TimeStrPtrToPgtypeDate(s *string) pgtype.Time {
 	}
 }
 
-func TimeStrToPgtypeDate(s string) pgtype.Time {
+func TimeStrToPgtypeTime(s string) pgtype.Time {
 	if s == "" {
 		return pgtype.Time{Valid: false}
 	}
@@ -133,4 +134,23 @@ func TimeStrToPgtypeDate(s string) pgtype.Time {
 		Microseconds: microseconds,
 		Valid:        true,
 	}
+}
+
+func PgDateToDateStr(d pgtype.Date) string {
+	if !d.Valid {
+		return ""
+	}
+	return d.Time.Format("02-01-2006")
+}
+
+func PgTimeToTimeStr(t pgtype.Time) string {
+	if !t.Valid {
+		return ""
+	}
+
+	totalMicroseconds := t.Microseconds
+	totalSeconds := totalMicroseconds / 1_000_000
+	hours := totalSeconds / 3600
+	minutes := (totalSeconds % 3600) / 60
+	return fmt.Sprintf("%02d:%02d", hours, minutes)
 }

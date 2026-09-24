@@ -42,6 +42,7 @@ var (
 	// 4XX
 	BadRequestDefault   = registerResponseCode("Bad request", 400000, http.StatusBadRequest)
 	InvalidJerseyNumber = registerResponseCode("Jersery number already used by active player", 400001, http.StatusBadRequest)
+	MatchDateInPast     = registerResponseCode("Match date in past. Use other date", 400002, http.StatusBadRequest)
 
 	NotFoundDefault = registerResponseCode("Not Found", 404000, http.StatusNotFound)
 	NotFoundTeam    = registerResponseCode("Not Found Team", 404001, http.StatusNotFound)

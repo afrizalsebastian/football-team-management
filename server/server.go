@@ -125,3 +125,30 @@ func (s *HttpServer) CreateMatch(c *gin.Context) {
 	resp := s.MatchController.CreateMatch(c)
 	api.WriteJSONResponse(c, resp.HttpCode, resp)
 }
+
+func (s *HttpServer) GetListMatches(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 30*time.Second)
+	defer cancel()
+
+	c.Request = c.Request.WithContext(ctx)
+	resp := s.MatchController.GetListMatches(c)
+	api.WriteJSONResponse(c, resp.HttpCode, resp)
+}
+
+func (s *HttpServer) RescheduleMatch(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 30*time.Second)
+	defer cancel()
+
+	c.Request = c.Request.WithContext(ctx)
+	resp := s.MatchController.RescheduleMatch(c)
+	api.WriteJSONResponse(c, resp.HttpCode, resp)
+}
+
+func (s *HttpServer) DeleteMatch(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 30*time.Second)
+	defer cancel()
+
+	c.Request = c.Request.WithContext(ctx)
+	resp := s.MatchController.DeleteMatch(c)
+	api.WriteJSONResponse(c, resp.HttpCode, resp)
+}
