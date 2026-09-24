@@ -12,6 +12,8 @@ import (
 type IPlayersController interface {
 	GetListPlayer(g *gin.Context) api.WebResponse[[]dto.GetListPlayerItem]
 	UpdatePlayer(g *gin.Context) api.WebResponse[*dto.GetPlayerDetailResponse]
+	GetPlayerDetail(g *gin.Context) api.WebResponse[*dto.GetPlayerDetailResponse]
+	DeletePlayer(g *gin.Context) api.WebResponse[any]
 }
 
 type playerController struct {
@@ -75,4 +77,46 @@ func (c *playerController) UpdatePlayer(g *gin.Context) api.WebResponse[*dto.Get
 
 	playerId := g.Param("playerId")
 	return c.playerService.UpdatePlayer(ctx, playerId, &request)
+}
+
+// GetPlayerDetail
+//
+//	@Summary		Get Player Detail
+//	@Description	Get Player Detail
+//	@Tags			Players
+//	@Accept			json
+//	@Produce		json
+//	@Param			playerId	path		string	true	"Player Id"
+//	@Success		200			{object}	api.WebResponse[dto.GetPlayerDetailResponse]
+//	@Failure		400			{object}	api.WebResponse[any]
+//	@Failure		500			{object}	api.WebResponse[any]
+//	@Router			/api/v1/players/{playerId} [get]
+func (c *playerController) GetPlayerDetail(g *gin.Context) api.WebResponse[*dto.GetPlayerDetailResponse] {
+	l := logger.LoggerNew()
+	ctx := g.Request.Context()
+
+	l.WithContext(ctx).Debug("[GetPlayerDetail].ctrl: Started").Msg()
+	playerId := g.Param("playerId")
+	return c.playerService.GetPlayerDetail(ctx, playerId)
+}
+
+// DeletePlayer
+//
+//	@Summary		Delete Player
+//	@Description	Delete Player
+//	@Tags			Players
+//	@Accept			json
+//	@Produce		json
+//	@Param			playerId	path		string	true	"Player Id"
+//	@Success		202			{object}	api.WebResponse[any]
+//	@Failure		400			{object}	api.WebResponse[any]
+//	@Failure		500			{object}	api.WebResponse[any]
+//	@Router			/api/v1/players/{playerId} [delete]
+func (c *playerController) DeletePlayer(g *gin.Context) api.WebResponse[any] {
+	l := logger.LoggerNew()
+	ctx := g.Request.Context()
+
+	l.WithContext(ctx).Debug("[GetPlayerDetail].ctrl: Started").Msg()
+	playerId := g.Param("playerId")
+	return c.playerService.DeletePlayer(ctx, playerId)
 }

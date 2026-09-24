@@ -16,5 +16,6 @@ type Players struct {
 	UpdatedAt    time.Time
 	IsDeleted    bool
 	DeletedAt    time.Time
+	GoalsCount   int
 	Team         *Teams
 }

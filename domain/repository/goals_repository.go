@@ -17,6 +17,7 @@ import (
 type IGoalsRepository interface {
 	MatchGoal(ctx context.Context, goals *dao.Goals) error
 	GetMatchGoalList(ctx context.Context, matchId string) ([]dao.Goals, *dao.Matches, error)
+	DeleteGoals(ctx context.Context, goalId string) error
 }
 
 type goalsRepository struct {
@@ -132,4 +133,34 @@ func (r *goalsRepository) GetMatchGoalList(ctx context.Context, matchIdStr strin
 
 	l.WithContext(ctx).Debug("[GetListMatchGoal].domain: Completed").Msg()
 	return result, match, nil
+}
+
+func (r *goalsRepository) DeleteGoals(ctx context.Context, goalIdStr string) error {
+	l := logger.LoggerNew()
+
+	l.WithContext(ctx).Debug("[DeleteGoals].domain: Started").Msg()
+
+	var (
+		goalId pgtype.UUID
+	)
+
+	if err := goalId.Scan(goalIdStr); err != nil {
+		return constants.InvalidUUIDValue
+	}
+
+	if _, err := r.db.DeleteGoals(ctx, goalId); err != nil {
+		l.WithContext(ctx).
+			Error("Error when delete goal").
+			Attr("error", err).
+			Msg()
+
+		if errors.Is(err, pgx.ErrNoRows) {
+			return constants.ErrNotFoundRow
+		}
+
+		return err
+	}
+
+	l.WithContext(ctx).Debug("[DeleteGoals].domain: Completed").Msg()
+	return nil
 }

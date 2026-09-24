@@ -9,6 +9,8 @@ func SetupPlayerRoutes(router *gin.RouterGroup, server *server.HttpServer) {
 	playerGroup := router.Group("/players")
 	{
 		playerGroup.GET("/", server.GetListPlayer)
+		playerGroup.GET("/:playerId", server.GetPlayerDetail)
 		playerGroup.PUT("/:playerId", server.UpdatePlayer)
+		playerGroup.DELETE("/:playerId", server.DeletePlayer)
 	}
 }

@@ -68,4 +68,5 @@ type GetPlayerDetailResponse struct {
 	IsDeleted    bool                `json:"is_deleted"`
 	DeletedAt    time.Time           `json:"deleted_at,omitempty"`
 	Team         *ListPlayerItemTeam `json:"team,omitempty"`
+	GoalCount    int                 `json:"goal_count,omitempty"`
 }

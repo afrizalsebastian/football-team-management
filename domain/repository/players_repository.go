@@ -20,6 +20,8 @@ type IPlayersRepository interface {
 	GetPlayerTeamByTeamId(ctx context.Context, teamId string) ([]dao.Players, error)
 	GetListPlayer(ctx context.Context) ([]dao.Players, error)
 	UpdatePartialPlayer(ctx context.Context, player *dao.Players) error
+	GetPlayerDetail(ctx context.Context, playerId string) (*dao.Players, error)
+	DeletePlayer(ctx context.Context, playerId string) error
 }
 
 type playerRepository struct {
@@ -239,4 +241,72 @@ func (d *playerRepository) createUpdatePlayerParams(player *dao.Players) (*playe
 		JerseyNumber: IntPtrToPgTypeInt2(player.JerseyNumber),
 		Position:     PositionPtrToNullPlayerPosition(player.Position),
 	}, nil
+}
+
+func (d *playerRepository) GetPlayerDetail(ctx context.Context, playerIdStr string) (*dao.Players, error) {
+	l := logger.LoggerNew()
+
+	l.WithContext(ctx).Debug("[GetPlayerDetail].domain: Started").Msg()
+
+	var playerId pgtype.UUID
+	if err := playerId.Scan(playerIdStr); err != nil {
+		return nil, constants.InvalidUUIDValue
+	}
+
+	row, err := d.db.GetPlayerDetail(ctx, playerId)
+	if err != nil {
+		l.WithContext(ctx).Error("error when get player detail").
+			Attr("error", err).Attr("player_id", playerIdStr).Msg()
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, constants.ErrNotFoundRow
+		}
+		return nil, err
+	}
+
+	height, _ := row.HeightCm.Float64Value()
+	weight, _ := row.WeightKg.Float64Value()
+	result := &dao.Players{
+		Id:           row.ID.String(),
+		Name:         helper.StringPtr(row.Name),
+		Height:       helper.Float64Ptr(height.Float64),
+		Weight:       helper.Float64Ptr(weight.Float64),
+		TeamId:       row.TeamID.String(),
+		Position:     helper.StringPtr(string(row.Position)),
+		JerseyNumber: helper.IntPtr(int(row.JerseyNumber)),
+		CreatedAt:    row.CreatedAt.Time,
+		UpdatedAt:    row.UpdatedAt.Time,
+		IsDeleted:    row.IsDeleted.Bool,
+		DeletedAt:    row.DeletedAt.Time,
+		GoalsCount:   int(row.GoalsCount),
+		Team: &dao.Teams{
+			Id:   row.TeamID.String(),
+			Name: helper.StringPtr(row.TeamName.String),
+		},
+	}
+
+	return result, nil
+}
+
+func (d *playerRepository) DeletePlayer(ctx context.Context, playerIdStr string) error {
+	l := logger.LoggerNew()
+
+	l.WithContext(ctx).Debug("[DeletePlayer].domain: Started").Msg()
+
+	var playerId pgtype.UUID
+	if err := playerId.Scan(playerIdStr); err != nil {
+		return constants.InvalidUUIDValue
+	}
+
+	_, err := d.db.DeletePlayer(ctx, playerId)
+	if err != nil {
+		l.WithContext(ctx).Error("error when delete player").
+			Attr("error", err).Attr("player_id", playerIdStr).Msg()
+		if errors.Is(err, pgx.ErrNoRows) {
+			return constants.ErrNotFoundRow
+		}
+		return err
+	}
+
+	l.WithContext(ctx).Debug("[DeletePlayer].domain: Started").Msg()
+	return nil
 }

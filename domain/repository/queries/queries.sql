@@ -77,6 +77,39 @@ SET
 WHERE id = @id AND is_deleted = false
 RETURNING *;
 
+-- name: GetPlayerDetail :one
+SELECT 
+  p.id as id,
+  p.name,
+  p.position,
+  p.jersey_number,
+  p.height_cm,
+  p.weight_kg,
+  t.id as team_id,
+  t.name as team_name,
+  count(g.id) as goals_count,
+  p.created_at,
+  p.updated_at,
+  p.is_deleted,
+  p.deleted_at
+FROM players p
+LEFT JOIN teams t ON p.team_id = t.id
+LEFT JOIN goals g ON g.player_id = p.id AND g.is_deleted = false
+WHERE p.id = @id
+  AND p.is_deleted = false
+  AND t.is_deleted = false
+GROUP BY p.id, t.id
+ORDER BY p.created_at ASC;
+
+-- name: DeletePlayer :one
+UPDATE players
+SET 
+  is_deleted = true,
+  deleted_at = now()
+WHERE id = @id AND is_deleted = false
+RETURNING *;
+
+
 -- name: CreateMatches :one
 INSERT INTO matches(
   match_date, match_time, home_team_id, away_team_id
@@ -162,3 +195,11 @@ LEFT JOIN teams home ON m.home_team_id = home.id
 LEFT JOIN teams away ON m.away_team_id = away.id
 WHERE g.match_id = @match_id and g.is_deleted = false
 ORDER BY g.created_at ASC;
+
+-- name: DeleteGoals :one
+UPDATE goals
+SET
+  is_deleted = true,
+  deleted_at = now()
+WHERE id = @id and is_deleted = false
+RETURNING id; 

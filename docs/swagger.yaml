@@ -383,6 +383,8 @@ definitions:
         type: string
       deleted_at:
         type: string
+      goal_count:
+        type: integer
       height:
         type: number
       id:
@@ -530,6 +532,35 @@ info:
   title: API Football Team Management
   version: "1.0"
 paths:
+  /api/v1/goals/{goalId}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete goal (soft-delete)
+      parameters:
+      - description: Goal ID
+        in: path
+        name: goalId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Accepted
+          schema:
+            $ref: '#/definitions/api.WebResponse-any'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.WebResponse-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.WebResponse-any'
+      summary: Delete goal (soft-delete)
+      tags:
+      - Goals
   /api/v1/hello:
     get:
       consumes:
@@ -757,6 +788,62 @@ paths:
       tags:
       - Players
   /api/v1/players/{playerId}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete Player
+      parameters:
+      - description: Player Id
+        in: path
+        name: playerId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Accepted
+          schema:
+            $ref: '#/definitions/api.WebResponse-any'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.WebResponse-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.WebResponse-any'
+      summary: Delete Player
+      tags:
+      - Players
+    get:
+      consumes:
+      - application/json
+      description: Get Player Detail
+      parameters:
+      - description: Player Id
+        in: path
+        name: playerId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.WebResponse-dto_GetPlayerDetailResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.WebResponse-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.WebResponse-any'
+      summary: Get Player Detail
+      tags:
+      - Players
     put:
       consumes:
       - application/json
@@ -993,4 +1080,10 @@ paths:
       summary: Create Team Player
       tags:
       - Teams
+securityDefinitions:
+  BearerAuth:
+    description: 'Please input token with format: Bearer <token>'
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"

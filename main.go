@@ -31,7 +31,11 @@ import (
 //	@contact.name	afrizalsebastian
 //	@contact.email	sebastiangurning@gmail.com
 
-// @host	localhost:8080
+// @host						localhost:8080
+// @securityDefinitions.apikey	BearerAuth
+// @in							header
+// @name						Authorization
+// @description				Please input token with format: Bearer <token>
 func main() {
 	l := logger.LoggerNew()
 
@@ -61,6 +65,7 @@ func main() {
 		routes.SetupTeamsRoutes(apiV1, httpServer)
 		routes.SetupPlayerRoutes(apiV1, httpServer)
 		routes.SetupMatchRoutes(apiV1, httpServer)
+		routes.SetupGoalRoutes(apiV1, httpServer)
 	}
 
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))

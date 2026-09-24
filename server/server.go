@@ -15,6 +15,7 @@ type HttpServer struct {
 	TeamsController  controllers.ITeamsController
 	PlayerController controllers.IPlayersController
 	MatchController  controllers.IMatchController
+	GoalController   controllers.IGoalController
 }
 
 func NewServer(app *bootstrap.FootballManagementApp) *HttpServer {
@@ -24,6 +25,7 @@ func NewServer(app *bootstrap.FootballManagementApp) *HttpServer {
 		TeamsController:  di.TeamsController,
 		PlayerController: di.PlayerController,
 		MatchController:  di.MatchController,
+		GoalController:   di.GoalController,
 	}
 }
 
@@ -117,6 +119,24 @@ func (s *HttpServer) UpdatePlayer(c *gin.Context) {
 	api.WriteJSONResponse(c, resp.HttpCode, resp)
 }
 
+func (s *HttpServer) GetPlayerDetail(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 30*time.Second)
+	defer cancel()
+
+	c.Request = c.Request.WithContext(ctx)
+	resp := s.PlayerController.GetPlayerDetail(c)
+	api.WriteJSONResponse(c, resp.HttpCode, resp)
+}
+
+func (s *HttpServer) DeletePlayer(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 30*time.Second)
+	defer cancel()
+
+	c.Request = c.Request.WithContext(ctx)
+	resp := s.PlayerController.DeletePlayer(c)
+	api.WriteJSONResponse(c, resp.HttpCode, resp)
+}
+
 func (s *HttpServer) CreateMatch(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(c.Request.Context(), 30*time.Second)
 	defer cancel()
@@ -168,5 +188,14 @@ func (s *HttpServer) MatchGoalList(c *gin.Context) {
 
 	c.Request = c.Request.WithContext(ctx)
 	resp := s.MatchController.MatchGoalList(c)
+	api.WriteJSONResponse(c, resp.HttpCode, resp)
+}
+
+func (s *HttpServer) DeleteGoal(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 30*time.Second)
+	defer cancel()
+
+	c.Request = c.Request.WithContext(ctx)
+	resp := s.GoalController.DeleteGoal(c)
 	api.WriteJSONResponse(c, resp.HttpCode, resp)
 }

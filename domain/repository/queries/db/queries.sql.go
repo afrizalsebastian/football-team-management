@@ -139,6 +139,22 @@ func (q *Queries) CreateTeam(ctx context.Context, arg *CreateTeamParams) (pgtype
 	return id, err
 }
 
+const deleteGoals = `-- name: DeleteGoals :one
+UPDATE goals
+SET
+  is_deleted = true,
+  deleted_at = now()
+WHERE id = $1 and is_deleted = false
+RETURNING id
+`
+
+func (q *Queries) DeleteGoals(ctx context.Context, id pgtype.UUID) (pgtype.UUID, error) {
+	row := q.db.QueryRow(ctx, deleteGoals, id)
+	var id_2 pgtype.UUID
+	err := row.Scan(&id_2)
+	return id_2, err
+}
+
 const deleteMatch = `-- name: DeleteMatch :one
 UPDATE matches
 SET 
@@ -153,6 +169,34 @@ func (q *Queries) DeleteMatch(ctx context.Context, id pgtype.UUID) (pgtype.UUID,
 	var id_2 pgtype.UUID
 	err := row.Scan(&id_2)
 	return id_2, err
+}
+
+const deletePlayer = `-- name: DeletePlayer :one
+UPDATE players
+SET 
+  is_deleted = true,
+  deleted_at = now()
+WHERE id = $1 AND is_deleted = false
+RETURNING id, team_id, name, height_cm, weight_kg, position, jersey_number, created_at, updated_at, is_deleted, deleted_at
+`
+
+func (q *Queries) DeletePlayer(ctx context.Context, id pgtype.UUID) (*Player, error) {
+	row := q.db.QueryRow(ctx, deletePlayer, id)
+	var i Player
+	err := row.Scan(
+		&i.ID,
+		&i.TeamID,
+		&i.Name,
+		&i.HeightCm,
+		&i.WeightKg,
+		&i.Position,
+		&i.JerseyNumber,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.IsDeleted,
+		&i.DeletedAt,
+	)
+	return &i, err
 }
 
 const getListMatch = `-- name: GetListMatch :many
@@ -427,6 +471,68 @@ func (q *Queries) GetListTeams(ctx context.Context) ([]*GetListTeamsRow, error) 
 		return nil, err
 	}
 	return items, nil
+}
+
+const getPlayerDetail = `-- name: GetPlayerDetail :one
+SELECT 
+  p.id as id,
+  p.name,
+  p.position,
+  p.jersey_number,
+  p.height_cm,
+  p.weight_kg,
+  t.id as team_id,
+  t.name as team_name,
+  count(g.id) as goals_count,
+  p.created_at,
+  p.updated_at,
+  p.is_deleted,
+  p.deleted_at
+FROM players p
+LEFT JOIN teams t ON p.team_id = t.id
+LEFT JOIN goals g ON g.player_id = p.id AND g.is_deleted = false
+WHERE p.id = $1
+  AND p.is_deleted = false
+  AND t.is_deleted = false
+GROUP BY p.id, t.id
+ORDER BY p.created_at ASC
+`
+
+type GetPlayerDetailRow struct {
+	ID           pgtype.UUID        `json:"id"`
+	Name         string             `json:"name"`
+	Position     PlayerPosition     `json:"position"`
+	JerseyNumber int16              `json:"jersey_number"`
+	HeightCm     pgtype.Numeric     `json:"height_cm"`
+	WeightKg     pgtype.Numeric     `json:"weight_kg"`
+	TeamID       pgtype.UUID        `json:"team_id"`
+	TeamName     pgtype.Text        `json:"team_name"`
+	GoalsCount   int64              `json:"goals_count"`
+	CreatedAt    pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
+	IsDeleted    pgtype.Bool        `json:"is_deleted"`
+	DeletedAt    pgtype.Timestamptz `json:"deleted_at"`
+}
+
+func (q *Queries) GetPlayerDetail(ctx context.Context, id pgtype.UUID) (*GetPlayerDetailRow, error) {
+	row := q.db.QueryRow(ctx, getPlayerDetail, id)
+	var i GetPlayerDetailRow
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Position,
+		&i.JerseyNumber,
+		&i.HeightCm,
+		&i.WeightKg,
+		&i.TeamID,
+		&i.TeamName,
+		&i.GoalsCount,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.IsDeleted,
+		&i.DeletedAt,
+	)
+	return &i, err
 }
 
 const getTeamDetail = `-- name: GetTeamDetail :one

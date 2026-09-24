@@ -12,6 +12,7 @@ type ServerDependencies struct {
 	TeamsController  controllers.ITeamsController
 	PlayerController controllers.IPlayersController
 	MatchController  controllers.IMatchController
+	GoalController   controllers.IGoalController
 }
 
 func initDI(app *bootstrap.FootballManagementApp) *ServerDependencies {
@@ -20,6 +21,7 @@ func initDI(app *bootstrap.FootballManagementApp) *ServerDependencies {
 		TeamsController:  setupTeamsController(app),
 		PlayerController: setupPlayerController(app),
 		MatchController:  setupMatchController(app),
+		GoalController:   setupGoalController(app),
 	}
 }
 
@@ -53,6 +55,14 @@ func setupMatchController(app *bootstrap.FootballManagementApp) controllers.IMat
 	goalRepository := repository.NewGoalsRepository(app.DBPool)
 	service := services.NewMatchService(matchRepository, goalRepository)
 	ctrl := controllers.NewMatchController(service)
+
+	return ctrl
+}
+
+func setupGoalController(app *bootstrap.FootballManagementApp) controllers.IGoalController {
+	goalRepository := repository.NewGoalsRepository(app.DBPool)
+	service := services.NewGoalService(goalRepository)
+	ctrl := controllers.NewGoalController(service)
 
 	return ctrl
 }
