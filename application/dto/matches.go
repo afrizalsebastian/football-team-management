@@ -22,13 +22,17 @@ type MatchTeam struct {
 }
 
 type GetMatchResponse struct {
-	Id         string    `json:"id"`
-	HomeTeamId string    `json:"home_team_id"`
-	AwayTeamId string    `json:"away_team_id"`
-	Date       string    `json:"date"`
-	Time       string    `json:"time"`
-	HomeTeam   MatchTeam `json:"home_team"`
-	AwayTeam   MatchTeam `json:"away_team"`
+	Id         string              `json:"id"`
+	HomeTeamId string              `json:"home_team_id"`
+	AwayTeamId string              `json:"away_team_id"`
+	Date       string              `json:"date"`
+	Time       string              `json:"time"`
+	Status     string              `json:"status"`
+	HomeScore  int                 `json:"home_score"`
+	AwayScore  int                 `json:"away_score"`
+	HomeTeam   MatchTeam           `json:"home_team"`
+	AwayTeam   MatchTeam           `json:"away_team"`
+	Goals      []MatchGoalListItem `json:"goals"`
 }
 
 type RescheduleMatchRequest struct {

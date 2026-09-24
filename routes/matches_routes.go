@@ -14,5 +14,6 @@ func SetupMatchRoutes(router *gin.RouterGroup, server *server.HttpServer) {
 		matchGroup.DELETE("/:matchId", server.DeleteMatch)
 		matchGroup.POST("/:matchId/goals", server.CreateMatchGoal)
 		matchGroup.PUT("/:matchId/reschedule", server.RescheduleMatch)
+		matchGroup.POST("/:matchId/full-time", server.MatchFullTime)
 	}
 }

@@ -26,6 +26,7 @@ type Querier interface {
 	GetListTeams(ctx context.Context) ([]*GetListTeamsRow, error)
 	GetPlayerDetail(ctx context.Context, id pgtype.UUID) (*GetPlayerDetailRow, error)
 	GetTeamDetail(ctx context.Context, id pgtype.UUID) (*Team, error)
+	MatchFullTime(ctx context.Context, matchID pgtype.UUID) (pgtype.UUID, error)
 	RescheduleMatch(ctx context.Context, arg *RescheduleMatchParams) (pgtype.UUID, error)
 	SoftDeleteTeams(ctx context.Context, id pgtype.UUID) (pgtype.UUID, error)
 	UpdatePlayers(ctx context.Context, arg *UpdatePlayersParams) (*Player, error)

@@ -105,6 +105,12 @@ const docTemplate = `{
                         "description": "Team ID",
                         "name": "teamId",
                         "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "type match: one of 'result' or 'scheduled'",
+                        "name": "type",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -228,6 +234,56 @@ const docTemplate = `{
                     "Matches"
                 ],
                 "summary": "Delete Match",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Match ID",
+                        "name": "matchId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.WebResponse-any"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.WebResponse-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.WebResponse-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.WebResponse-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/matches/{matchId}/full-time": {
+            "post": {
+                "description": "Submit matches result. Full-Time",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Matches"
+                ],
+                "summary": "Submit matches result. Full-Time",
                 "parameters": [
                     {
                         "type": "string",
@@ -1399,6 +1455,9 @@ const docTemplate = `{
         "dto.GetMatchResponse": {
             "type": "object",
             "properties": {
+                "away_score": {
+                    "type": "integer"
+                },
                 "away_team": {
                     "$ref": "#/definitions/dto.MatchTeam"
                 },
@@ -1408,6 +1467,15 @@ const docTemplate = `{
                 "date": {
                     "type": "string"
                 },
+                "goals": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.MatchGoalListItem"
+                    }
+                },
+                "home_score": {
+                    "type": "integer"
+                },
                 "home_team": {
                     "$ref": "#/definitions/dto.MatchTeam"
                 },
@@ -1415,6 +1483,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
+                    "type": "string"
+                },
+                "status": {
                     "type": "string"
                 },
                 "time": {

@@ -16,7 +16,7 @@ SELECT * FROM teams
 WHERE id = @id AND is_deleted = false;
 
 -- name: CheckTeamExisits :one
-SELECT id from teams WHERE id = @id;
+SELECT id FROM teams WHERE id = @id;
 
 -- name: UpdateTeams :one
 UPDATE teams
@@ -127,10 +127,22 @@ SELECT
   home.name as home_team_name,
   home.logo as home_logo,
   away.name as away_team_name,
-  away.logo as away_logo
+  away.logo as away_logo,
+  mr.status,
+  mr.home_score,
+  mr.away_score,
+  p.id as player_id,
+  p.name as player_name,
+  p.jersey_number as player_number,
+  p.team_id as player_team_id,
+  g.id as goal_id,
+  g.goal_minute
 FROM matches m
 LEFT JOIN teams home ON m.home_team_id = home.id
 LEFT JOIN teams away ON m.away_team_id = away.id
+LEFT JOIN match_results mr ON mr.id = m.id
+LEFT JOIN goals g ON g.match_id = m.id and g.is_deleted = false
+LEFT JOIN players p ON p.id = g.player_id
 WHERE m.is_deleted = false
   AND (
     (sqlc.narg('home_team_id')::uuid IS NULL OR home_team_id = sqlc.narg('home_team_id')::uuid) OR 
@@ -138,7 +150,12 @@ WHERE m.is_deleted = false
   )
   AND home.is_deleted = false
   AND away.is_deleted = false
-ORDER BY m.match_date ASC, m.match_time ASC;
+  AND (
+    sqlc.narg('filter_type')::text IS NULL OR
+    (sqlc.narg('filter_type')::text = 'scheduled' AND mr.id IS NULL) OR
+    (sqlc.narg('filter_type')::text = 'result' AND mr.id IS NOT NULL)
+  )
+ORDER BY m.match_date ASC, m.match_time ASC, g.goal_minute ASC;
 
 -- name: RescheduleMatch :one
 UPDATE matches
@@ -146,7 +163,7 @@ SET
   match_date = @match_date,
   match_time = @match_time,
   updated_at = now()
-WHERE id = @id and is_deleted = false
+WHERE id = @id AND is_deleted = false
 RETURNING id;
 
 -- name: DeleteMatch :one
@@ -154,7 +171,7 @@ UPDATE matches
 SET 
   is_deleted = true,
   deleted_at = now()
-WHERE id = @id and is_deleted = false
+WHERE id = @id AND is_deleted = false
 RETURNING id;
 
 -- name: CreateGoals :one
@@ -193,7 +210,7 @@ JOIN players p ON p.id = g.player_id
 JOIN teams t ON t.id = p.team_id
 LEFT JOIN teams home ON m.home_team_id = home.id
 LEFT JOIN teams away ON m.away_team_id = away.id
-WHERE g.match_id = @match_id and g.is_deleted = false
+WHERE g.match_id = @match_id AND g.is_deleted = false
 ORDER BY g.created_at ASC;
 
 -- name: DeleteGoals :one
@@ -201,5 +218,41 @@ UPDATE goals
 SET
   is_deleted = true,
   deleted_at = now()
-WHERE id = @id and is_deleted = false
+WHERE id = @id AND is_deleted = false
 RETURNING id; 
+
+-- name: MatchFullTime :one
+WITH match_info AS (
+  SELECT ma.id as match_id, home_team_id, away_team_id
+  FROM matches ma
+  WHERE ma.id = @match_id
+),
+goals_count AS (
+  SELECT
+    m.match_id,
+    COALESCE(SUM(CASE WHEN p.team_id = m.home_team_id THEN 1 ELSE 0 END), 0) AS home_score,
+    COALESCE(SUM(CASE WHEN p.team_id = m.away_team_id THEN 1 ELSE 0 END), 0) AS away_score
+  FROM match_info m
+  LEFT JOIN goals g ON g.match_id = m.match_id and g.is_deleted = false
+  LEFT JOIN players p ON p.id = g.player_id
+  GROUP BY m.match_id
+)
+INSERT INTO match_results(
+  id, status, home_score, away_score
+)
+SELECT
+  gc.match_id as id,
+  CASE 
+      WHEN gc.home_score > gc.away_score THEN 1 
+      WHEN gc.home_score < gc.away_score THEN -1
+      ELSE 0                            
+  END AS status,
+  gc.home_score,
+  gc.away_score
+FROM goals_count gc
+ON CONFLICT (id) 
+DO UPDATE SET 
+    status = EXCLUDED.status,
+    home_score = EXCLUDED.home_score,
+    away_score = EXCLUDED.away_score
+RETURNING id;

@@ -1,6 +1,8 @@
 package controllers
 
 import (
+	"strings"
+
 	"github.com/afrizalsebastian/football-team-management/api"
 	"github.com/afrizalsebastian/football-team-management/application/dto"
 	"github.com/afrizalsebastian/football-team-management/application/helper"
@@ -17,6 +19,7 @@ type IMatchController interface {
 	DeleteMatch(g *gin.Context) api.WebResponse[any]
 	CreateMatchGoal(g *gin.Context) api.WebResponse[any]
 	MatchGoalList(g *gin.Context) api.WebResponse[*dto.MatchGoalsResponse]
+	MatchFullTime(g *gin.Context) api.WebResponse[any]
 }
 
 type matchController struct {
@@ -95,6 +98,8 @@ func (c *matchController) CreateMatch(g *gin.Context) api.WebResponse[*dto.Creat
 //
 //	@Param			teamId	query		string	false	"Team ID"
 //
+//	@Param			type	query		string	false	"type match: one of 'result' or 'scheduled'"
+//
 //	@Success		200		{object}	api.WebResponse[[]dto.GetMatchResponse]
 //	@Failure		400		{object}	api.WebResponse[any]
 //	@Failure		500		{object}	api.WebResponse[any]
@@ -110,7 +115,12 @@ func (c *matchController) GetListMatches(g *gin.Context) api.WebResponse[[]dto.G
 		teamId = helper.StringPtr(val)
 	}
 
-	return c.matchService.GetListMatches(ctx, teamId)
+	var matchType *string
+	if val := g.Query("type"); val != "" && (strings.EqualFold(val, "result") || strings.EqualFold(val, "scheduled")) {
+		matchType = helper.StringPtr(strings.ToLower(val))
+	}
+
+	return c.matchService.GetListMatches(ctx, teamId, matchType)
 }
 
 // RescheduleMatch
@@ -266,4 +276,28 @@ func (c *matchController) MatchGoalList(g *gin.Context) api.WebResponse[*dto.Mat
 
 	matchId := g.Param("matchId")
 	return c.matchService.MatchGoalList(ctx, matchId)
+}
+
+// MatchFullTime
+//
+//	@Summary		Submit matches result. Full-Time
+//	@Description	Submit matches result. Full-Time
+//	@Tags			Matches
+//	@Accept			json
+//	@Produce		json
+//
+//	@Param			matchId	path		string	true	"Match ID"
+//
+//	@Success		200		{object}	api.WebResponse[any]
+//	@Failure		400		{object}	api.WebResponse[any]
+//	@Failure		404		{object}	api.WebResponse[any]
+//	@Failure		500		{object}	api.WebResponse[any]
+//	@Router			/api/v1/matches/{matchId}/full-time [post]
+func (c *matchController) MatchFullTime(g *gin.Context) api.WebResponse[any] {
+	l := logger.LoggerNew()
+	ctx := g.Request.Context()
+
+	l.WithContext(ctx).Debug("[MatchFullTime].ctrl: Started").Msg()
+	matchId := g.Param("matchId")
+	return c.matchService.MatchFullTime(ctx, matchId)
 }

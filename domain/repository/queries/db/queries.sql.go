@@ -12,7 +12,7 @@ import (
 )
 
 const checkTeamExisits = `-- name: CheckTeamExisits :one
-SELECT id from teams WHERE id = $1
+SELECT id FROM teams WHERE id = $1
 `
 
 func (q *Queries) CheckTeamExisits(ctx context.Context, id pgtype.UUID) (pgtype.UUID, error) {
@@ -144,7 +144,7 @@ UPDATE goals
 SET
   is_deleted = true,
   deleted_at = now()
-WHERE id = $1 and is_deleted = false
+WHERE id = $1 AND is_deleted = false
 RETURNING id
 `
 
@@ -160,7 +160,7 @@ UPDATE matches
 SET 
   is_deleted = true,
   deleted_at = now()
-WHERE id = $1 and is_deleted = false
+WHERE id = $1 AND is_deleted = false
 RETURNING id
 `
 
@@ -209,10 +209,22 @@ SELECT
   home.name as home_team_name,
   home.logo as home_logo,
   away.name as away_team_name,
-  away.logo as away_logo
+  away.logo as away_logo,
+  mr.status,
+  mr.home_score,
+  mr.away_score,
+  p.id as player_id,
+  p.name as player_name,
+  p.jersey_number as player_number,
+  p.team_id as player_team_id,
+  g.id as goal_id,
+  g.goal_minute
 FROM matches m
 LEFT JOIN teams home ON m.home_team_id = home.id
 LEFT JOIN teams away ON m.away_team_id = away.id
+LEFT JOIN match_results mr ON mr.id = m.id
+LEFT JOIN goals g ON g.match_id = m.id and g.is_deleted = false
+LEFT JOIN players p ON p.id = g.player_id
 WHERE m.is_deleted = false
   AND (
     ($1::uuid IS NULL OR home_team_id = $1::uuid) OR 
@@ -220,12 +232,18 @@ WHERE m.is_deleted = false
   )
   AND home.is_deleted = false
   AND away.is_deleted = false
-ORDER BY m.match_date ASC, m.match_time ASC
+  AND (
+    $3::text IS NULL OR
+    ($3::text = 'scheduled' AND mr.id IS NULL) OR
+    ($3::text = 'result' AND mr.id IS NOT NULL)
+  )
+ORDER BY m.match_date ASC, m.match_time ASC, g.goal_minute ASC
 `
 
 type GetListMatchParams struct {
 	HomeTeamID pgtype.UUID `json:"home_team_id"`
 	AwayTeamID pgtype.UUID `json:"away_team_id"`
+	FilterType pgtype.Text `json:"filter_type"`
 }
 
 type GetListMatchRow struct {
@@ -238,10 +256,19 @@ type GetListMatchRow struct {
 	HomeLogo     pgtype.Text `json:"home_logo"`
 	AwayTeamName pgtype.Text `json:"away_team_name"`
 	AwayLogo     pgtype.Text `json:"away_logo"`
+	Status       pgtype.Int2 `json:"status"`
+	HomeScore    pgtype.Int2 `json:"home_score"`
+	AwayScore    pgtype.Int2 `json:"away_score"`
+	PlayerID     pgtype.UUID `json:"player_id"`
+	PlayerName   pgtype.Text `json:"player_name"`
+	PlayerNumber pgtype.Int2 `json:"player_number"`
+	PlayerTeamID pgtype.UUID `json:"player_team_id"`
+	GoalID       pgtype.UUID `json:"goal_id"`
+	GoalMinute   pgtype.Text `json:"goal_minute"`
 }
 
 func (q *Queries) GetListMatch(ctx context.Context, arg *GetListMatchParams) ([]*GetListMatchRow, error) {
-	rows, err := q.db.Query(ctx, getListMatch, arg.HomeTeamID, arg.AwayTeamID)
+	rows, err := q.db.Query(ctx, getListMatch, arg.HomeTeamID, arg.AwayTeamID, arg.FilterType)
 	if err != nil {
 		return nil, err
 	}
@@ -259,6 +286,15 @@ func (q *Queries) GetListMatch(ctx context.Context, arg *GetListMatchParams) ([]
 			&i.HomeLogo,
 			&i.AwayTeamName,
 			&i.AwayLogo,
+			&i.Status,
+			&i.HomeScore,
+			&i.AwayScore,
+			&i.PlayerID,
+			&i.PlayerName,
+			&i.PlayerNumber,
+			&i.PlayerTeamID,
+			&i.GoalID,
+			&i.GoalMinute,
 		); err != nil {
 			return nil, err
 		}
@@ -290,7 +326,7 @@ JOIN players p ON p.id = g.player_id
 JOIN teams t ON t.id = p.team_id
 LEFT JOIN teams home ON m.home_team_id = home.id
 LEFT JOIN teams away ON m.away_team_id = away.id
-WHERE g.match_id = $1 and g.is_deleted = false
+WHERE g.match_id = $1 AND g.is_deleted = false
 ORDER BY g.created_at ASC
 `
 
@@ -558,13 +594,57 @@ func (q *Queries) GetTeamDetail(ctx context.Context, id pgtype.UUID) (*Team, err
 	return &i, err
 }
 
+const matchFullTime = `-- name: MatchFullTime :one
+WITH match_info AS (
+  SELECT ma.id as match_id, home_team_id, away_team_id
+  FROM matches ma
+  WHERE ma.id = $1
+),
+goals_count AS (
+  SELECT
+    m.match_id,
+    COALESCE(SUM(CASE WHEN p.team_id = m.home_team_id THEN 1 ELSE 0 END), 0) AS home_score,
+    COALESCE(SUM(CASE WHEN p.team_id = m.away_team_id THEN 1 ELSE 0 END), 0) AS away_score
+  FROM match_info m
+  LEFT JOIN goals g ON g.match_id = m.match_id and g.is_deleted = false
+  LEFT JOIN players p ON p.id = g.player_id
+  GROUP BY m.match_id
+)
+INSERT INTO match_results(
+  id, status, home_score, away_score
+)
+SELECT
+  gc.match_id as id,
+  CASE 
+      WHEN gc.home_score > gc.away_score THEN 1 
+      WHEN gc.home_score < gc.away_score THEN -1
+      ELSE 0                            
+  END AS status,
+  gc.home_score,
+  gc.away_score
+FROM goals_count gc
+ON CONFLICT (id) 
+DO UPDATE SET 
+    status = EXCLUDED.status,
+    home_score = EXCLUDED.home_score,
+    away_score = EXCLUDED.away_score
+RETURNING id
+`
+
+func (q *Queries) MatchFullTime(ctx context.Context, matchID pgtype.UUID) (pgtype.UUID, error) {
+	row := q.db.QueryRow(ctx, matchFullTime, matchID)
+	var id pgtype.UUID
+	err := row.Scan(&id)
+	return id, err
+}
+
 const rescheduleMatch = `-- name: RescheduleMatch :one
 UPDATE matches
 SET 
   match_date = $1,
   match_time = $2,
   updated_at = now()
-WHERE id = $3 and is_deleted = false
+WHERE id = $3 AND is_deleted = false
 RETURNING id
 `
 

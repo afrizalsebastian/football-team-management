@@ -35,7 +35,7 @@ type GetListTeamPlayerItem struct {
 
 type ListPlayerItemTeam struct {
 	Id   string `json:"id"`
-	Name string `json:"name"`
+	Name string `json:"name,omitempty"`
 }
 
 type GetListPlayerItem struct {
@@ -43,7 +43,7 @@ type GetListPlayerItem struct {
 	Name         string             `json:"name"`
 	Position     *PlayerPosition    `json:"position,omitempty"`
 	JerseyNumber int                `json:"jersey_number"`
-	Team         ListPlayerItemTeam `json:"team"`
+	Team         ListPlayerItemTeam `json:"team,omitempty"`
 }
 
 type UpdatePlayerRequest struct {

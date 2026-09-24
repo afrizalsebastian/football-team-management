@@ -362,17 +362,27 @@ definitions:
     type: object
   dto.GetMatchResponse:
     properties:
+      away_score:
+        type: integer
       away_team:
         $ref: '#/definitions/dto.MatchTeam'
       away_team_id:
         type: string
       date:
         type: string
+      goals:
+        items:
+          $ref: '#/definitions/dto.MatchGoalListItem'
+        type: array
+      home_score:
+        type: integer
       home_team:
         $ref: '#/definitions/dto.MatchTeam'
       home_team_id:
         type: string
       id:
+        type: string
+      status:
         type: string
       time:
         type: string
@@ -586,6 +596,10 @@ paths:
         in: query
         name: teamId
         type: string
+      - description: 'type match: one of ''result'' or ''scheduled'''
+        in: query
+        name: type
+        type: string
       produces:
       - application/json
       responses:
@@ -692,6 +706,39 @@ paths:
           schema:
             $ref: '#/definitions/api.WebResponse-any'
       summary: Get Match Goal list
+      tags:
+      - Matches
+  /api/v1/matches/{matchId}/full-time:
+    post:
+      consumes:
+      - application/json
+      description: Submit matches result. Full-Time
+      parameters:
+      - description: Match ID
+        in: path
+        name: matchId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.WebResponse-any'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.WebResponse-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.WebResponse-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.WebResponse-any'
+      summary: Submit matches result. Full-Time
       tags:
       - Matches
   /api/v1/matches/{matchId}/goals:

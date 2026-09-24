@@ -16,9 +16,10 @@ import (
 
 type IMatchesRepository interface {
 	CreateMatches(ctx context.Context, match *dao.Matches) error
-	GetListMatch(ctx context.Context, teamId *string) ([]dao.Matches, error)
+	GetListMatch(ctx context.Context, teamId *string, matchType *string) ([]dao.Matches, error)
 	RescheduleMatch(ctx context.Context, match *dao.Matches) error
 	DeleteMatch(ctx context.Context, matchId string) error
+	MatchFullTime(ctx context.Context, matchId string) error
 }
 
 type matchesRepository struct {
@@ -73,7 +74,7 @@ func (r *matchesRepository) CreateMatches(ctx context.Context, match *dao.Matche
 	return nil
 }
 
-func (r *matchesRepository) GetListMatch(ctx context.Context, teamId *string) ([]dao.Matches, error) {
+func (r *matchesRepository) GetListMatch(ctx context.Context, teamId *string, matchType *string) ([]dao.Matches, error) {
 	l := logger.LoggerNew()
 
 	l.WithContext(ctx).Debug("[GetListMatch].domain: Started").Msg()
@@ -94,6 +95,7 @@ func (r *matchesRepository) GetListMatch(ctx context.Context, teamId *string) ([
 	rows, err := r.db.GetListMatch(ctx, &matchdb.GetListMatchParams{
 		HomeTeamID: homeId,
 		AwayTeamID: awayId,
+		FilterType: StringPtrToPgtypeText(matchType),
 	})
 	if err != nil {
 		l.WithContext(ctx).
@@ -104,33 +106,109 @@ func (r *matchesRepository) GetListMatch(ctx context.Context, teamId *string) ([
 		return nil, err
 	}
 
-	result := make([]dao.Matches, 0)
+	mapMatch := make(map[string]bool)
+	match := make([]dao.Matches, 0)
+	mapGoals := make(map[string][]dao.Goals)
+	mapTeamGoals := make(map[string]map[string]int)
+
 	for _, r := range rows {
 		if r == nil {
 			continue
 		}
 
-		result = append(result, dao.Matches{
-			Id:         r.ID.String(),
-			HomeTeamId: r.HomeTeamID.String(),
-			AwayTeamId: r.AwayTeamID.String(),
-			MatchDate:  helper.StringPtr(PgDateToDateStr(r.MatchDate)),
-			MatchTime:  helper.StringPtr(PgTimeToTimeStr(r.MatchTime)),
-			HomeTeam: &dao.Teams{
-				Id:   r.HomeTeamID.String(),
-				Name: helper.StringPtr(r.HomeTeamName.String),
-				Logo: helper.StringPtr(r.HomeLogo.String),
-			},
-			AwayTeam: &dao.Teams{
-				Id:   r.AwayTeamID.String(),
-				Name: helper.StringPtr(r.AwayTeamName.String),
-				Logo: helper.StringPtr(r.AwayLogo.String),
-			},
-		})
+		rowMatchId := r.ID.String()
+		if _, ok := mapMatch[rowMatchId]; !ok {
+			match = append(match, dao.Matches{
+				Id:         rowMatchId,
+				HomeTeamId: r.HomeTeamID.String(),
+				AwayTeamId: r.AwayTeamID.String(),
+				MatchDate:  helper.StringPtr(PgDateToDateStr(r.MatchDate)),
+				MatchTime:  helper.StringPtr(PgTimeToTimeStr(r.MatchTime)),
+				HomeTeam: &dao.Teams{
+					Id:   r.HomeTeamID.String(),
+					Name: helper.StringPtr(r.HomeTeamName.String),
+					Logo: helper.StringPtr(r.HomeLogo.String),
+				},
+				AwayTeam: &dao.Teams{
+					Id:   r.AwayTeamID.String(),
+					Name: helper.StringPtr(r.AwayTeamName.String),
+					Logo: helper.StringPtr(r.AwayLogo.String),
+				},
+				Status:    int(r.Status.Int16),
+				HomeScore: int(r.HomeScore.Int16),
+				AwayScore: int(r.AwayScore.Int16),
+			})
+
+			mapMatch[rowMatchId] = true
+		}
+
+		if r.GoalID.Valid {
+			playerTeamId := r.PlayerTeamID.String()
+			mapGoals[rowMatchId] = append(mapGoals[rowMatchId], dao.Goals{
+				Id:         r.GoalID.String(),
+				GoalMinute: r.GoalMinute.String,
+				PlayerId:   r.PlayerID.String(),
+				Player: &dao.Players{
+					Id:           r.PlayerID.String(),
+					Name:         helper.StringPtr(r.PlayerName.String),
+					JerseyNumber: helper.IntPtr(int(r.PlayerNumber.Int16)),
+					TeamId:       playerTeamId,
+				},
+			})
+
+			// live score
+			_, ok := mapTeamGoals[rowMatchId]
+			if !ok {
+				mapTeamGoals[rowMatchId] = map[string]int{
+					playerTeamId: 1,
+				}
+				continue
+			}
+
+			_, ok = mapTeamGoals[rowMatchId][playerTeamId]
+			if !ok {
+				mapTeamGoals[rowMatchId][playerTeamId] = 1
+				continue
+			}
+
+			mapTeamGoals[rowMatchId][playerTeamId] += 1
+		}
 	}
 
+	for i := range match {
+		val, _ := mapGoals[match[i].Id]
+		match[i].Goals = val
+
+		// RESULT OF SCORE BASED ON MATCH RESULT
+		// THIS IS FOR LIVESCORE WHEN MATCH RESULT DOESN'T MADE YET
+		if match[i].AwayScore == 0 {
+			val, ok := mapTeamGoals[match[i].Id][match[i].AwayTeamId]
+			if ok {
+				match[i].AwayScore = val
+			}
+		}
+
+		if match[i].HomeScore == 0 {
+			val, ok := mapTeamGoals[match[i].Id][match[i].HomeTeamId]
+			if ok {
+				match[i].HomeScore = val
+			}
+		}
+
+		switch {
+		case match[i].AwayScore == match[i].HomeScore:
+			match[i].Status = 0
+
+		case match[i].AwayScore > match[i].HomeScore:
+			match[i].Status = -1
+
+		case match[i].AwayScore < match[i].HomeScore:
+			match[i].Status = 1
+		}
+		// ====================================================
+	}
 	l.WithContext(ctx).Debug("[GetListMatch].domain: Completed").Msg()
-	return result, nil
+	return match, nil
 }
 
 func (r *matchesRepository) RescheduleMatch(ctx context.Context, match *dao.Matches) error {
@@ -177,6 +255,33 @@ func (r *matchesRepository) DeleteMatch(ctx context.Context, matchIdStr string) 
 	if _, err := r.db.DeleteMatch(ctx, matchId); err != nil {
 		l.WithContext(ctx).
 			Error("Error when delete match").
+			Attr("error", err).
+			Msg()
+
+		if errors.Is(err, pgx.ErrNoRows) {
+			return constants.ErrNotFoundRow
+		}
+
+		return err
+	}
+
+	l.WithContext(ctx).Debug("[DeleteMatch].domain: Completed").Msg()
+	return nil
+}
+
+func (r *matchesRepository) MatchFullTime(ctx context.Context, matchIdStr string) error {
+	l := logger.LoggerNew()
+
+	l.WithContext(ctx).Debug("[DeleteMatch].domain: Started").Msg()
+
+	var matchId pgtype.UUID
+	if err := matchId.Scan(matchIdStr); err != nil {
+		return constants.InvalidUUIDValue
+	}
+
+	if _, err := r.db.MatchFullTime(ctx, matchId); err != nil {
+		l.WithContext(ctx).
+			Error("Error when set match result").
 			Attr("error", err).
 			Msg()
 

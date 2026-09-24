@@ -199,3 +199,12 @@ func (s *HttpServer) DeleteGoal(c *gin.Context) {
 	resp := s.GoalController.DeleteGoal(c)
 	api.WriteJSONResponse(c, resp.HttpCode, resp)
 }
+
+func (s *HttpServer) MatchFullTime(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 30*time.Second)
+	defer cancel()
+
+	c.Request = c.Request.WithContext(ctx)
+	resp := s.MatchController.MatchFullTime(c)
+	api.WriteJSONResponse(c, resp.HttpCode, resp)
+}

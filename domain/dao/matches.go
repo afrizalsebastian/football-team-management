@@ -8,6 +8,9 @@ type Matches struct {
 	MatchTime  *string
 	HomeTeamId string
 	AwayTeamId string
+	Status     int
+	HomeScore  int
+	AwayScore  int
 	CreatedAt  time.Time
 	UpdatedAt  time.Time
 	IsDeleted  bool

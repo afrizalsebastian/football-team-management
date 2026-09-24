@@ -77,6 +77,14 @@ type Match struct {
 	DeletedAt  pgtype.Timestamptz `json:"deleted_at"`
 }
 
+type MatchResult struct {
+	ID        pgtype.UUID        `json:"id"`
+	HomeScore int16              `json:"home_score"`
+	AwayScore int16              `json:"away_score"`
+	Status    int16              `json:"status"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+}
+
 type Player struct {
 	ID           pgtype.UUID        `json:"id"`
 	TeamID       pgtype.UUID        `json:"team_id"`
