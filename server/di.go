@@ -50,7 +50,8 @@ func setupPlayerController(app *bootstrap.FootballManagementApp) controllers.IPl
 
 func setupMatchController(app *bootstrap.FootballManagementApp) controllers.IMatchController {
 	matchRepository := repository.NewMatchesRepository(app.DBPool)
-	service := services.NewMatchService(matchRepository)
+	goalRepository := repository.NewGoalsRepository(app.DBPool)
+	service := services.NewMatchService(matchRepository, goalRepository)
 	ctrl := controllers.NewMatchController(service)
 
 	return ctrl

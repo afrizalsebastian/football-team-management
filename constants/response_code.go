@@ -36,7 +36,7 @@ var (
 	// 2XX
 	SuccessDefault        = registerResponseCode("Success", 200000, http.StatusOK)
 	SuccesssWithEmptyList = registerResponseCode("Success with empty list data", 200001, http.StatusOK)
-	CreatedDefault        = registerResponseCode("Success", 201000, http.StatusCreated)
+	CreatedDefault        = registerResponseCode("Created", 201000, http.StatusCreated)
 	AcceptDefault         = registerResponseCode("Accpeted", 202000, http.StatusAccepted)
 
 	// 4XX

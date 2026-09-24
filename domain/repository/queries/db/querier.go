@@ -12,11 +12,13 @@ import (
 
 type Querier interface {
 	CheckTeamExisits(ctx context.Context, id pgtype.UUID) (pgtype.UUID, error)
+	CreateGoals(ctx context.Context, arg *CreateGoalsParams) (pgtype.UUID, error)
 	CreateMatches(ctx context.Context, arg *CreateMatchesParams) (pgtype.UUID, error)
 	CreatePlayerTeam(ctx context.Context, arg *CreatePlayerTeamParams) (pgtype.UUID, error)
 	CreateTeam(ctx context.Context, arg *CreateTeamParams) (pgtype.UUID, error)
 	DeleteMatch(ctx context.Context, id pgtype.UUID) (pgtype.UUID, error)
 	GetListMatch(ctx context.Context, arg *GetListMatchParams) ([]*GetListMatchRow, error)
+	GetListMatchGoals(ctx context.Context, matchID pgtype.UUID) ([]*GetListMatchGoalsRow, error)
 	GetListPlayer(ctx context.Context) ([]*GetListPlayerRow, error)
 	GetListPlayerTeam(ctx context.Context, teamID pgtype.UUID) ([]*GetListPlayerTeamRow, error)
 	GetListTeams(ctx context.Context) ([]*GetListTeamsRow, error)

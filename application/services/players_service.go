@@ -70,7 +70,7 @@ func (s *playerService) GetListPlayer(ctx context.Context) api.WebResponse[[]dto
 		response = append(response, dto.GetListPlayerItem{
 			Id:   r.Id,
 			Name: helper.GetStringPtrValue(r.Name),
-			Position: dto.PlayerPosition{
+			Position: &dto.PlayerPosition{
 				Code:  positionCode,
 				Title: positionTitle,
 			},

@@ -18,17 +18,22 @@ type IMatchesService interface {
 	GetListMatches(ctx context.Context, teamId *string) api.WebResponse[[]dto.GetMatchResponse]
 	RescheduleMatch(ctx context.Context, matchId string, request *dto.RescheduleMatchRequest) api.WebResponse[any]
 	DeleteMatch(ctx context.Context, matchId string) api.WebResponse[any]
+	CreateMatchGoal(ctx context.Context, matchId string, request *dto.MatchGoal) api.WebResponse[any]
+	MatchGoalList(ctx context.Context, matchId string) api.WebResponse[*dto.MatchGoalsResponse]
 }
 
 type matchesService struct {
 	matchRepository repository.IMatchesRepository
+	goalRepository  repository.IGoalsRepository
 }
 
 func NewMatchService(
 	matchRepository repository.IMatchesRepository,
+	goalRepository repository.IGoalsRepository,
 ) IMatchesService {
 	return &matchesService{
 		matchRepository: matchRepository,
+		goalRepository:  goalRepository,
 	}
 }
 
@@ -95,7 +100,7 @@ func (s *matchesService) GetListMatches(ctx context.Context, teamId *string) api
 	}
 
 	if len(result) == 0 {
-		api.SuccessResponse[[]dto.GetMatchResponse](
+		return api.SuccessResponse[[]dto.GetMatchResponse](
 			ctx,
 			constants.SuccesssWithEmptyList.GetMessage(),
 			constants.SuccesssWithEmptyList.GetCode(),
@@ -201,5 +206,118 @@ func (s *matchesService) DeleteMatch(ctx context.Context, matchId string) api.We
 		constants.AcceptDefault.GetCode(),
 		constants.AcceptDefault.GetHttpCode(),
 		nil,
+	)
+}
+
+func (s *matchesService) CreateMatchGoal(ctx context.Context, matchId string, request *dto.MatchGoal) api.WebResponse[any] {
+	l := logger.LoggerNew()
+
+	l.WithContext(ctx).Debug("[CreateMatchGoal].service: Started").Msg()
+	goals := &dao.Goals{
+		MatchId:    matchId,
+		PlayerId:   request.PlayerId,
+		GoalMinute: request.GoalMinute,
+	}
+	if err := s.goalRepository.MatchGoal(ctx, goals); err != nil {
+		l.WithContext(ctx).Error("error when create goals").Attr("error", err).Attr("match_id", matchId).Msg()
+
+		errMsg := constants.InternalServerError
+		if errors.Is(err, constants.InvalidUUIDValue) {
+			errMsg = constants.BadRequestDefault
+		}
+
+		if errors.Is(err, constants.ErrNotFoundRow) {
+			errMsg = constants.NotFoundDefault
+		}
+
+		return api.ErrorResponse[any](
+			ctx,
+			errMsg.GetMessage(),
+			errMsg.GetCode(),
+			errMsg.GetHttpCode(),
+			nil,
+		)
+	}
+
+	l.WithContext(ctx).Debug("[CreateMatchGoal].service: Completed").Msg()
+	return api.SuccessResponse[any](
+		ctx,
+		constants.CreatedDefault.GetMessage(),
+		constants.CreatedDefault.GetCode(),
+		constants.CreatedDefault.GetHttpCode(),
+		nil,
+	)
+}
+
+func (s *matchesService) MatchGoalList(ctx context.Context, matchId string) api.WebResponse[*dto.MatchGoalsResponse] {
+	l := logger.LoggerNew()
+
+	l.WithContext(ctx).Debug("[MatchGoalList].service: Started").Msg()
+
+	result, match, err := s.goalRepository.GetMatchGoalList(ctx, matchId)
+	if err != nil {
+		l.WithContext(ctx).Error("error when get match goal list").Attr("error", err).Attr("match_id", matchId).Msg()
+
+		errMsg := constants.InternalServerError
+		if errors.Is(err, constants.InvalidUUIDValue) {
+			errMsg = constants.BadRequestDefault
+		}
+
+		return api.ErrorResponse[*dto.MatchGoalsResponse](
+			ctx,
+			errMsg.GetMessage(),
+			errMsg.GetCode(),
+			errMsg.GetHttpCode(),
+			nil,
+		)
+	}
+
+	if len(result) == 0 {
+		return api.SuccessResponse[*dto.MatchGoalsResponse](
+			ctx,
+			constants.SuccesssWithEmptyList.GetMessage(),
+			constants.SuccesssWithEmptyList.GetCode(),
+			constants.SuccesssWithEmptyList.GetHttpCode(),
+			nil,
+		)
+	}
+
+	goals := make([]dto.MatchGoalListItem, 0)
+	for _, r := range result {
+		goals = append(goals, dto.MatchGoalListItem{
+			Id:         r.Id,
+			GoalMinute: r.GoalMinute,
+			Player: dto.GetListPlayerItem{
+				Id:           r.Player.Id,
+				Name:         helper.GetStringPtrValue(r.Player.Name),
+				JerseyNumber: helper.GetIntPtrValue(r.Player.JerseyNumber),
+				Team: dto.ListPlayerItemTeam{
+					Id:   r.Player.Team.Id,
+					Name: helper.GetStringPtrValue(r.Player.Team.Name),
+				},
+			},
+		})
+	}
+
+	response := &dto.MatchGoalsResponse{
+		Goals:   goals,
+		MatchId: match.Id,
+		HomeTeam: dto.ListPlayerItemTeam{
+			Id:   match.HomeTeam.Id,
+			Name: helper.GetStringPtrValue(match.HomeTeam.Name),
+		},
+		AwayTeam: dto.ListPlayerItemTeam{
+			Id:   match.AwayTeam.Id,
+			Name: helper.GetStringPtrValue(match.AwayTeam.Name),
+		},
+	}
+
+	l.WithContext(ctx).Debug("[CreateMatchGoal].service: MatchGoalList").Msg()
+	return api.SuccessResponse(
+		ctx,
+		constants.SuccessDefault.GetMessage(),
+		constants.SuccessDefault.GetCode(),
+		constants.SuccessDefault.GetHttpCode(),
+		response,
 	)
 }

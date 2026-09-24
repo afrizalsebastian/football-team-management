@@ -152,3 +152,21 @@ func (s *HttpServer) DeleteMatch(c *gin.Context) {
 	resp := s.MatchController.DeleteMatch(c)
 	api.WriteJSONResponse(c, resp.HttpCode, resp)
 }
+
+func (s *HttpServer) CreateMatchGoal(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 30*time.Second)
+	defer cancel()
+
+	c.Request = c.Request.WithContext(ctx)
+	resp := s.MatchController.CreateMatchGoal(c)
+	api.WriteJSONResponse(c, resp.HttpCode, resp)
+}
+
+func (s *HttpServer) MatchGoalList(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 30*time.Second)
+	defer cancel()
+
+	c.Request = c.Request.WithContext(ctx)
+	resp := s.MatchController.MatchGoalList(c)
+	api.WriteJSONResponse(c, resp.HttpCode, resp)
+}

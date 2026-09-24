@@ -22,6 +22,36 @@ func (q *Queries) CheckTeamExisits(ctx context.Context, id pgtype.UUID) (pgtype.
 	return id_2, err
 }
 
+const createGoals = `-- name: CreateGoals :one
+INSERT INTO goals(
+  match_id, player_id, goal_minute
+) 
+SELECT
+  m.id,
+  p.id,
+  $1
+FROM matches m
+JOIN players p ON p.id = $2 
+WHERE m.id = $3
+  AND m.is_deleted = false
+  AND p.is_deleted = false 
+  AND (m.home_team_id = p.team_id OR m.away_team_id = p.team_id)
+RETURNING id
+`
+
+type CreateGoalsParams struct {
+	GoalMinute pgtype.Text `json:"goal_minute"`
+	PlayerID   pgtype.UUID `json:"player_id"`
+	MatchID    pgtype.UUID `json:"match_id"`
+}
+
+func (q *Queries) CreateGoals(ctx context.Context, arg *CreateGoalsParams) (pgtype.UUID, error) {
+	row := q.db.QueryRow(ctx, createGoals, arg.GoalMinute, arg.PlayerID, arg.MatchID)
+	var id pgtype.UUID
+	err := row.Scan(&id)
+	return id, err
+}
+
 const createMatches = `-- name: CreateMatches :one
 INSERT INTO matches(
   match_date, match_time, home_team_id, away_team_id
@@ -137,13 +167,15 @@ SELECT
   away.name as away_team_name,
   away.logo as away_logo
 FROM matches m
-LEFT JOIN teams home ON m.home_team_id = home.id AND home.is_deleted = false
-LEFT JOIN teams away ON m.away_team_id = away.id AND away.is_deleted = false
+LEFT JOIN teams home ON m.home_team_id = home.id
+LEFT JOIN teams away ON m.away_team_id = away.id
 WHERE m.is_deleted = false
   AND (
     ($1::uuid IS NULL OR home_team_id = $1::uuid) OR 
     ($2::uuid IS NULL OR away_team_id = $2::uuid)
   )
+  AND home.is_deleted = false
+  AND away.is_deleted = false
 ORDER BY m.match_date ASC, m.match_time ASC
 `
 
@@ -194,6 +226,78 @@ func (q *Queries) GetListMatch(ctx context.Context, arg *GetListMatchParams) ([]
 	return items, nil
 }
 
+const getListMatchGoals = `-- name: GetListMatchGoals :many
+SELECT
+  g.id,
+  g.match_id,
+  home.id as home_team_id,
+  home.name as home_team_name,
+  away.id as away_team_id,
+  away.name as away_team_name,
+  g.player_id,
+  p.name as player_name,
+  p.jersey_number as jersey_number,
+  t.id as team_id,
+  t.name as team_name,
+  g.goal_minute
+FROM goals g
+JOIN matches m ON m.id = g.match_id
+JOIN players p ON p.id = g.player_id
+JOIN teams t ON t.id = p.team_id
+LEFT JOIN teams home ON m.home_team_id = home.id
+LEFT JOIN teams away ON m.away_team_id = away.id
+WHERE g.match_id = $1 and g.is_deleted = false
+ORDER BY g.created_at ASC
+`
+
+type GetListMatchGoalsRow struct {
+	ID           pgtype.UUID `json:"id"`
+	MatchID      pgtype.UUID `json:"match_id"`
+	HomeTeamID   pgtype.UUID `json:"home_team_id"`
+	HomeTeamName pgtype.Text `json:"home_team_name"`
+	AwayTeamID   pgtype.UUID `json:"away_team_id"`
+	AwayTeamName pgtype.Text `json:"away_team_name"`
+	PlayerID     pgtype.UUID `json:"player_id"`
+	PlayerName   string      `json:"player_name"`
+	JerseyNumber int16       `json:"jersey_number"`
+	TeamID       pgtype.UUID `json:"team_id"`
+	TeamName     string      `json:"team_name"`
+	GoalMinute   pgtype.Text `json:"goal_minute"`
+}
+
+func (q *Queries) GetListMatchGoals(ctx context.Context, matchID pgtype.UUID) ([]*GetListMatchGoalsRow, error) {
+	rows, err := q.db.Query(ctx, getListMatchGoals, matchID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []*GetListMatchGoalsRow{}
+	for rows.Next() {
+		var i GetListMatchGoalsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.MatchID,
+			&i.HomeTeamID,
+			&i.HomeTeamName,
+			&i.AwayTeamID,
+			&i.AwayTeamName,
+			&i.PlayerID,
+			&i.PlayerName,
+			&i.JerseyNumber,
+			&i.TeamID,
+			&i.TeamName,
+			&i.GoalMinute,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getListPlayer = `-- name: GetListPlayer :many
 SELECT 
   p.id as id,
@@ -203,8 +307,9 @@ SELECT
   t.id as team_id,
   t.name as team_name
 FROM players p
-LEFT JOIN teams t ON p.team_id = t.id AND t.is_deleted = false
+LEFT JOIN teams t ON p.team_id = t.id
 WHERE p.is_deleted = false
+  AND t.is_deleted = false
 ORDER BY p.created_at ASC
 `
 

@@ -205,6 +205,25 @@ definitions:
       message_id:
         type: string
     type: object
+  api.WebResponse-dto_MatchGoalsResponse:
+    properties:
+      data:
+        $ref: '#/definitions/dto.MatchGoalsResponse'
+      error_message:
+        type: string
+      errors_detail:
+        items:
+          $ref: '#/definitions/api.ErrorsDetail'
+        type: array
+      http_code:
+        type: integer
+      message:
+        type: string
+      message_code:
+        type: integer
+      message_id:
+        type: string
+    type: object
   dto.CreateMatchRequest:
     properties:
       away_team_id:
@@ -415,6 +434,38 @@ definitions:
       name:
         type: string
     type: object
+  dto.MatchGoal:
+    properties:
+      goal_minute:
+        type: string
+      player_id:
+        type: string
+    required:
+    - goal_minute
+    - player_id
+    type: object
+  dto.MatchGoalListItem:
+    properties:
+      goal_minute:
+        type: string
+      id:
+        type: string
+      player:
+        $ref: '#/definitions/dto.GetListPlayerItem'
+    type: object
+  dto.MatchGoalsResponse:
+    properties:
+      away_team:
+        $ref: '#/definitions/dto.ListPlayerItemTeam'
+      goals:
+        items:
+          $ref: '#/definitions/dto.MatchGoalListItem'
+        type: array
+      home_team:
+        $ref: '#/definitions/dto.ListPlayerItemTeam'
+      match_id:
+        type: string
+    type: object
   dto.MatchTeam:
     properties:
       id:
@@ -582,6 +633,73 @@ paths:
           schema:
             $ref: '#/definitions/api.WebResponse-any'
       summary: Delete Match
+      tags:
+      - Matches
+    get:
+      consumes:
+      - application/json
+      description: Get Match Goal list
+      parameters:
+      - description: Team ID
+        in: path
+        name: matchId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.WebResponse-dto_MatchGoalsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.WebResponse-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.WebResponse-any'
+      summary: Get Match Goal list
+      tags:
+      - Matches
+  /api/v1/matches/{matchId}/goals:
+    post:
+      consumes:
+      - application/json
+      description: Create a new match goal
+      parameters:
+      - description: Match ID
+        in: path
+        name: matchId
+        required: true
+        type: string
+      - description: Create match body request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.MatchGoal'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/api.WebResponse-any'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.WebResponse-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.WebResponse-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.WebResponse-any'
+      summary: Create Match goal
       tags:
       - Matches
   /api/v1/matches/{matchId}/reschedule:

@@ -15,4 +15,6 @@ type Matches struct {
 
 	HomeTeam *Teams
 	AwayTeam *Teams
+
+	Goals []Goals
 }

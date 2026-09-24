@@ -18,6 +18,7 @@ func init() {
 	// Register custom validation if needed
 	validate.RegisterValidation("ddmmyyyy", validateDateFormat)
 	validate.RegisterValidation("hhmm", validateTimeFormat)
+	validate.RegisterValidation("goal", validateGoalMinute)
 }
 
 func validateDateFormat(fl validator.FieldLevel) bool {
@@ -38,6 +39,16 @@ func validateTimeFormat(fl validator.FieldLevel) bool {
 		return true
 	}
 	matched, _ := regexp.MatchString(`^([01]\d|2[0-3]):([0-5]\d)$`, field)
+	return matched
+}
+
+func validateGoalMinute(fl validator.FieldLevel) bool {
+	field := fl.Field().String()
+	if field == "" {
+		return true
+	}
+
+	matched, _ := regexp.MatchString(`^\d{1,3}:[0-5]\d(\+\d{1,3}:[0-5]\d)?$`, field)
 	return matched
 }
 
@@ -75,6 +86,9 @@ func getValidationErrorMessage(ctx context.Context, fe validator.FieldError) (in
 	case "nefield":
 		errCode = constants.NotEqualFieldValidationErr.GetCode()
 		validationErrMsg = constants.NotEqualFieldValidationErr.GetMessageWithParam(fe.Field(), fe.Param())
+	case "goal":
+		errCode = constants.GoalMinuteValidationErr.GetCode()
+		validationErrMsg = constants.GoalMinuteValidationErr.GetMessageWithParam(fe.Field())
 	default:
 		errCode = constants.DefaultValidationErr.GetCode()
 		validationErrMsg = constants.DefaultValidationErr.GetMessageWithParam(fe.Field())

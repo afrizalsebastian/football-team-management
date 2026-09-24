@@ -59,8 +59,9 @@ SELECT
   t.id as team_id,
   t.name as team_name
 FROM players p
-LEFT JOIN teams t ON p.team_id = t.id AND t.is_deleted = false
+LEFT JOIN teams t ON p.team_id = t.id
 WHERE p.is_deleted = false
+  AND t.is_deleted = false
 ORDER BY p.created_at ASC;
 
 -- name: UpdatePlayers :one
@@ -95,13 +96,15 @@ SELECT
   away.name as away_team_name,
   away.logo as away_logo
 FROM matches m
-LEFT JOIN teams home ON m.home_team_id = home.id AND home.is_deleted = false
-LEFT JOIN teams away ON m.away_team_id = away.id AND away.is_deleted = false
+LEFT JOIN teams home ON m.home_team_id = home.id
+LEFT JOIN teams away ON m.away_team_id = away.id
 WHERE m.is_deleted = false
   AND (
     (sqlc.narg('home_team_id')::uuid IS NULL OR home_team_id = sqlc.narg('home_team_id')::uuid) OR 
     (sqlc.narg('away_team_id')::uuid IS NULL OR away_team_id = sqlc.narg('away_team_id')::uuid)
   )
+  AND home.is_deleted = false
+  AND away.is_deleted = false
 ORDER BY m.match_date ASC, m.match_time ASC;
 
 -- name: RescheduleMatch :one
@@ -120,3 +123,42 @@ SET
   deleted_at = now()
 WHERE id = @id and is_deleted = false
 RETURNING id;
+
+-- name: CreateGoals :one
+INSERT INTO goals(
+  match_id, player_id, goal_minute
+) 
+SELECT
+  m.id,
+  p.id,
+  @goal_minute
+FROM matches m
+JOIN players p ON p.id = @player_id 
+WHERE m.id = @match_id
+  AND m.is_deleted = false
+  AND p.is_deleted = false 
+  AND (m.home_team_id = p.team_id OR m.away_team_id = p.team_id)
+RETURNING id;
+
+-- name: GetListMatchGoals :many
+SELECT
+  g.id,
+  g.match_id,
+  home.id as home_team_id,
+  home.name as home_team_name,
+  away.id as away_team_id,
+  away.name as away_team_name,
+  g.player_id,
+  p.name as player_name,
+  p.jersey_number as jersey_number,
+  t.id as team_id,
+  t.name as team_name,
+  g.goal_minute
+FROM goals g
+JOIN matches m ON m.id = g.match_id
+JOIN players p ON p.id = g.player_id
+JOIN teams t ON t.id = p.team_id
+LEFT JOIN teams home ON m.home_team_id = home.id
+LEFT JOIN teams away ON m.away_team_id = away.id
+WHERE g.match_id = @match_id and g.is_deleted = false
+ORDER BY g.created_at ASC;

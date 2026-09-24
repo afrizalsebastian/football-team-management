@@ -15,6 +15,8 @@ type IMatchController interface {
 	GetListMatches(g *gin.Context) api.WebResponse[[]dto.GetMatchResponse]
 	RescheduleMatch(g *gin.Context) api.WebResponse[any]
 	DeleteMatch(g *gin.Context) api.WebResponse[any]
+	CreateMatchGoal(g *gin.Context) api.WebResponse[any]
+	MatchGoalList(g *gin.Context) api.WebResponse[*dto.MatchGoalsResponse]
 }
 
 type matchController struct {
@@ -191,4 +193,77 @@ func (c *matchController) DeleteMatch(g *gin.Context) api.WebResponse[any] {
 	l.WithContext(ctx).Debug("[DeleteMatch].ctrl: Started").Msg()
 	matchId := g.Param("matchId")
 	return c.matchService.DeleteMatch(ctx, matchId)
+}
+
+// CreateMatchGoal
+//
+//	@Summary		Create Match goal
+//	@Description	Create a new match goal
+//	@Tags			Matches
+//	@Accept			json
+//	@Produce		json
+//
+//	@Param			matchId	path		string			true	"Match ID"
+//
+//	@Param			request	body		dto.MatchGoal	true	"Create match body request"
+//	@Success		201		{object}	api.WebResponse[any]
+//	@Failure		400		{object}	api.WebResponse[any]
+//	@Failure		404		{object}	api.WebResponse[any]
+//	@Failure		500		{object}	api.WebResponse[any]
+//	@Router			/api/v1/matches/{matchId}/goals [post]
+func (c *matchController) CreateMatchGoal(g *gin.Context) api.WebResponse[any] {
+	l := logger.LoggerNew()
+	ctx := g.Request.Context()
+
+	l.WithContext(ctx).Debug("[CreateMatchGoal].ctrl: Started").Msg()
+
+	var request dto.MatchGoal
+	if err := g.ShouldBindBodyWithJSON(&request); err != nil {
+		l.WithContext(ctx).Error("error when read request").Attr("error", err).Msg()
+		return api.ErrorResponse[any](
+			ctx,
+			constants.BadRequestDefault.GetMessage(),
+			constants.BadRequestDefault.GetCode(),
+			constants.BadRequestDefault.GetHttpCode(),
+			nil,
+		)
+	}
+
+	if valErr := helper.ValidateParams(ctx, &request); valErr != nil {
+		l.WithContext(ctx).Error("error when read request").Attr("error", valErr).Msg()
+		return api.ErrorResponse[any](
+			ctx,
+			constants.BadRequestDefault.GetMessage(),
+			constants.BadRequestDefault.GetCode(),
+			constants.BadRequestDefault.GetHttpCode(),
+			valErr,
+		)
+	}
+
+	matchId := g.Param("matchId")
+	return c.matchService.CreateMatchGoal(ctx, matchId, &request)
+}
+
+// MatchGoalList
+//
+//	@Summary		Get Match Goal list
+//	@Description	Get Match Goal list
+//	@Tags			Matches
+//	@Accept			json
+//	@Produce		json
+//
+//	@Param			matchId	path		string	true	"Team ID"
+//
+//	@Success		200		{object}	api.WebResponse[dto.MatchGoalsResponse]
+//	@Failure		400		{object}	api.WebResponse[any]
+//	@Failure		500		{object}	api.WebResponse[any]
+//	@Router			/api/v1/matches/{matchId} [get]
+func (c *matchController) MatchGoalList(g *gin.Context) api.WebResponse[*dto.MatchGoalsResponse] {
+	l := logger.LoggerNew()
+	ctx := g.Request.Context()
+
+	l.WithContext(ctx).Debug("[MatchGoalList].ctrl: Started").Msg()
+
+	matchId := g.Param("matchId")
+	return c.matchService.MatchGoalList(ctx, matchId)
 }

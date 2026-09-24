@@ -33,4 +33,5 @@ var (
 	DateValidationErr          = regValidationErr(400108, "This field '%s' must be with format DD-MM-YYYY")
 	TimeValidationErr          = regValidationErr(400109, "This field '%s' must be with format HH:mm")
 	NotEqualFieldValidationErr = regValidationErr(400110, "This field '%s' must be different with field '%s'")
+	GoalMinuteValidationErr    = regValidationErr(400111, "This field '%s' must be with format MM:ss+MM:ss. Example: 45:00+01:00. For injury time is optional")
 )

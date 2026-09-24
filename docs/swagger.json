@@ -123,6 +123,48 @@
             }
         },
         "/api/v1/matches/{matchId}": {
+            "get": {
+                "description": "Get Match Goal list",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Matches"
+                ],
+                "summary": "Get Match Goal list",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Team ID",
+                        "name": "matchId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.WebResponse-dto_MatchGoalsResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.WebResponse-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.WebResponse-any"
+                        }
+                    }
+                }
+            },
             "delete": {
                 "description": "Delete Match",
                 "consumes": [
@@ -147,6 +189,65 @@
                 "responses": {
                     "200": {
                         "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.WebResponse-any"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.WebResponse-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.WebResponse-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.WebResponse-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/matches/{matchId}/goals": {
+            "post": {
+                "description": "Create a new match goal",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Matches"
+                ],
+                "summary": "Create Match goal",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Match ID",
+                        "name": "matchId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Create match body request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.MatchGoal"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
                         "schema": {
                             "$ref": "#/definitions/api.WebResponse-any"
                         }
@@ -928,6 +1029,35 @@
                 }
             }
         },
+        "api.WebResponse-dto_MatchGoalsResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/dto.MatchGoalsResponse"
+                },
+                "error_message": {
+                    "type": "string"
+                },
+                "errors_detail": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api.ErrorsDetail"
+                    }
+                },
+                "http_code": {
+                    "type": "integer"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "message_code": {
+                    "type": "integer"
+                },
+                "message_id": {
+                    "type": "string"
+                }
+            }
+        },
         "dto.CreateMatchRequest": {
             "type": "object",
             "required": [
@@ -1240,6 +1370,55 @@
                     "type": "string"
                 },
                 "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.MatchGoal": {
+            "type": "object",
+            "required": [
+                "goal_minute",
+                "player_id"
+            ],
+            "properties": {
+                "goal_minute": {
+                    "type": "string"
+                },
+                "player_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.MatchGoalListItem": {
+            "type": "object",
+            "properties": {
+                "goal_minute": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "player": {
+                    "$ref": "#/definitions/dto.GetListPlayerItem"
+                }
+            }
+        },
+        "dto.MatchGoalsResponse": {
+            "type": "object",
+            "properties": {
+                "away_team": {
+                    "$ref": "#/definitions/dto.ListPlayerItemTeam"
+                },
+                "goals": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.MatchGoalListItem"
+                    }
+                },
+                "home_team": {
+                    "$ref": "#/definitions/dto.ListPlayerItemTeam"
+                },
+                "match_id": {
                     "type": "string"
                 }
             }

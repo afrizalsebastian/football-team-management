@@ -35,3 +35,21 @@ type RescheduleMatchRequest struct {
 	Date string `json:"date" validate:"required,ddmmyyyy"`
 	Time string `json:"time" validate:"required,hhmm"`
 }
+
+type MatchGoal struct {
+	PlayerId   string `json:"player_id" validate:"required"`
+	GoalMinute string `json:"goal_minute" validate:"required,goal"`
+}
+
+type MatchGoalListItem struct {
+	Id         string            `json:"id"`
+	GoalMinute string            `json:"goal_minute"`
+	Player     GetListPlayerItem `json:"player"`
+}
+
+type MatchGoalsResponse struct {
+	Goals    []MatchGoalListItem `json:"goals"`
+	MatchId  string              `json:"match_id"`
+	HomeTeam ListPlayerItemTeam  `json:"home_team"`
+	AwayTeam ListPlayerItemTeam  `json:"away_team"`
+}
