@@ -37,12 +37,18 @@ func (d *teamsRepository) CreateTeam(ctx context.Context, team *dao.Teams) error
 	l := logger.LoggerNew()
 
 	l.WithContext(ctx).Debug("[CreateTeam].domain: Started").Msg()
+	admin := helper.GetContextValueClaims(ctx)
+	if admin == nil {
+		return constants.AdminContextNil
+	}
+
 	params := teamsdb.CreateTeamParams{
 		Name:        *team.Name,
 		Logo:        StringPtrToPgtypeText(team.Logo),
 		FoundedYear: StringPtrToPgtypeText(team.FoundedYear),
 		Address:     *team.Address,
 		City:        *team.City,
+		CreatedBy:   StringToPgtypeText(admin.Username),
 	}
 
 	result, err := d.db.CreateTeam(ctx, &params)
@@ -94,12 +100,20 @@ func (d *teamsRepository) SoftDeleteTeam(ctx context.Context, id string) error {
 
 	l.WithContext(ctx).Debug("[SoftDeleteTeam].domain: Started").Attr("team_id", id).Msg()
 
+	admin := helper.GetContextValueClaims(ctx)
+	if admin == nil {
+		return constants.AdminContextNil
+	}
+
 	var uuidTeams pgtype.UUID
 	if err := uuidTeams.Scan(id); err != nil {
 		return constants.InvalidUUIDValue
 	}
 
-	if _, err := d.db.SoftDeleteTeams(ctx, uuidTeams); err != nil {
+	if _, err := d.db.SoftDeleteTeams(ctx, &teamsdb.SoftDeleteTeamsParams{
+		ID:        uuidTeams,
+		DeletedBy: StringToPgtypeText(admin.Username),
+	}); err != nil {
 		l.WithContext(ctx).Error("error when soft delete team").Attr("team_id", id).Msg()
 		if errors.Is(err, pgx.ErrNoRows) {
 			return constants.ErrNotFoundRow
@@ -150,6 +164,11 @@ func (d *teamsRepository) UpdatePartialTeam(ctx context.Context, team *dao.Teams
 	l := logger.LoggerNew()
 
 	l.WithContext(ctx).Debug("[GetTeamDetail].domain: Started").Attr("team_id", team.Id).Msg()
+	admin := helper.GetContextValueClaims(ctx)
+	if admin == nil {
+		return constants.AdminContextNil
+	}
+
 	var uuidTeams pgtype.UUID
 	if err := uuidTeams.Scan(team.Id); err != nil {
 		return constants.InvalidUUIDValue
@@ -162,6 +181,7 @@ func (d *teamsRepository) UpdatePartialTeam(ctx context.Context, team *dao.Teams
 		Address:     StringPtrToPgtypeText(team.Address),
 		City:        StringPtrToPgtypeText(team.City),
 		ID:          uuidTeams,
+		UpdatedBy:   StringToPgtypeText(admin.Username),
 	}
 
 	result, err := d.db.UpdateTeams(ctx, params)

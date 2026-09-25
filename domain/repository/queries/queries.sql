@@ -1,8 +1,8 @@
 -- name: CreateTeam :one
 INSERT INTO teams (
-  name, logo, founded_year, address, city
+  name, logo, founded_year, address, city, created_by
 ) VALUES (
-  @name, @logo, @founded_year, @address, @city
+  @name, @logo, @founded_year, @address, @city, @created_by
 ) RETURNING id;
 
 -- name: GetListTeams :many
@@ -26,22 +26,24 @@ SET
   founded_year = COALESCE(sqlc.narg('founded_year'), founded_year),
   address = COALESCE(sqlc.narg('address'), address),
   city = COALESCE(sqlc.narg('city'), city),
-  updated_at = now()
+  updated_at = now(),
+  updated_by = @updated_by
 WHERE id = @id AND is_deleted = false
 RETURNING *;
 
 -- name: SoftDeleteTeams :one
 UPDATE teams
 SET is_deleted = true,
-  deleted_at = now()
+  deleted_at = now(),
+  deleted_by = @deleted_by
 WHERE id = @id AND is_deleted = false
 RETURNING id;
 
 -- name: CreatePlayerTeam :one
 INSERT INTO players (
-  team_id, name, height_cm, weight_kg, position, jersey_number
+  team_id, name, height_cm, weight_kg, position, jersey_number, created_by
 ) VALUES (
-  @team_id, @name, @height_cm, @weight_kg, @position, @jersey_number
+  @team_id, @name, @height_cm, @weight_kg, @position, @jersey_number, @created_by
 ) RETURNING id;
 
 -- name: GetListPlayerTeam :many
@@ -73,7 +75,8 @@ SET
   weight_kg = COALESCE(sqlc.narg('weight_kg'), weight_kg),
   position = COALESCE(sqlc.narg('position'), position),
   jersey_number = COALESCE(sqlc.narg('jersey_number'), jersey_number),
-  updated_at = now()
+  updated_at = now(),
+  updated_by = @updated_by
 WHERE id = @id AND is_deleted = false
 RETURNING *;
 
@@ -105,16 +108,17 @@ ORDER BY p.created_at ASC;
 UPDATE players
 SET 
   is_deleted = true,
-  deleted_at = now()
+  deleted_at = now(),
+  deleted_by = @deleted_by
 WHERE id = @id AND is_deleted = false
 RETURNING *;
 
 
 -- name: CreateMatches :one
 INSERT INTO matches(
-  match_date, match_time, home_team_id, away_team_id
+  match_date, match_time, home_team_id, away_team_id, created_by
 ) VALUES (
-  @match_date, @match_time, @home_team_id, @away_team_id
+  @match_date, @match_time, @home_team_id, @away_team_id, @created_by
 ) RETURNING id;
 
 -- name: GetListMatch :many
@@ -162,7 +166,8 @@ UPDATE matches
 SET 
   match_date = @match_date,
   match_time = @match_time,
-  updated_at = now()
+  updated_at = now(),
+  updated_by = @updated_by
 WHERE id = @id AND is_deleted = false
 RETURNING id;
 
@@ -170,18 +175,20 @@ RETURNING id;
 UPDATE matches
 SET 
   is_deleted = true,
-  deleted_at = now()
+  deleted_at = now(),
+  deleted_by = @deleted_by
 WHERE id = @id AND is_deleted = false
 RETURNING id;
 
 -- name: CreateGoals :one
 INSERT INTO goals(
-  match_id, player_id, goal_minute
+  match_id, player_id, goal_minute, created_by
 ) 
 SELECT
   m.id,
   p.id,
-  @goal_minute
+  @goal_minute,
+  @created_by
 FROM matches m
 JOIN players p ON p.id = @player_id 
 WHERE m.id = @match_id
@@ -217,7 +224,8 @@ ORDER BY g.created_at ASC;
 UPDATE goals
 SET
   is_deleted = true,
-  deleted_at = now()
+  deleted_at = now(),
+  deleted_by = @deleted_by
 WHERE id = @id AND is_deleted = false
 RETURNING id; 
 
@@ -238,7 +246,7 @@ goals_count AS (
   GROUP BY m.match_id
 )
 INSERT INTO match_results(
-  id, status, home_score, away_score
+  id, status, home_score, away_score, created_by
 )
 SELECT
   gc.match_id as id,
@@ -248,7 +256,8 @@ SELECT
       ELSE 0                            
   END AS status,
   gc.home_score,
-  gc.away_score
+  gc.away_score,
+  @created_by
 FROM goals_count gc
 ON CONFLICT (id) 
 DO UPDATE SET 

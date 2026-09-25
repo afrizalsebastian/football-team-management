@@ -44,15 +44,16 @@ func (q *Queries) CreateAdminAccount(ctx context.Context, arg *CreateAdminAccoun
 
 const createGoals = `-- name: CreateGoals :one
 INSERT INTO goals(
-  match_id, player_id, goal_minute
+  match_id, player_id, goal_minute, created_by
 ) 
 SELECT
   m.id,
   p.id,
-  $1
+  $1,
+  $2
 FROM matches m
-JOIN players p ON p.id = $2 
-WHERE m.id = $3
+JOIN players p ON p.id = $3 
+WHERE m.id = $4
   AND m.is_deleted = false
   AND p.is_deleted = false 
   AND (m.home_team_id = p.team_id OR m.away_team_id = p.team_id)
@@ -61,12 +62,18 @@ RETURNING id
 
 type CreateGoalsParams struct {
 	GoalMinute pgtype.Text `json:"goal_minute"`
+	CreatedBy  pgtype.Text `json:"created_by"`
 	PlayerID   pgtype.UUID `json:"player_id"`
 	MatchID    pgtype.UUID `json:"match_id"`
 }
 
 func (q *Queries) CreateGoals(ctx context.Context, arg *CreateGoalsParams) (pgtype.UUID, error) {
-	row := q.db.QueryRow(ctx, createGoals, arg.GoalMinute, arg.PlayerID, arg.MatchID)
+	row := q.db.QueryRow(ctx, createGoals,
+		arg.GoalMinute,
+		arg.CreatedBy,
+		arg.PlayerID,
+		arg.MatchID,
+	)
 	var id pgtype.UUID
 	err := row.Scan(&id)
 	return id, err
@@ -74,9 +81,9 @@ func (q *Queries) CreateGoals(ctx context.Context, arg *CreateGoalsParams) (pgty
 
 const createMatches = `-- name: CreateMatches :one
 INSERT INTO matches(
-  match_date, match_time, home_team_id, away_team_id
+  match_date, match_time, home_team_id, away_team_id, created_by
 ) VALUES (
-  $1, $2, $3, $4
+  $1, $2, $3, $4, $5
 ) RETURNING id
 `
 
@@ -85,6 +92,7 @@ type CreateMatchesParams struct {
 	MatchTime  pgtype.Time `json:"match_time"`
 	HomeTeamID pgtype.UUID `json:"home_team_id"`
 	AwayTeamID pgtype.UUID `json:"away_team_id"`
+	CreatedBy  pgtype.Text `json:"created_by"`
 }
 
 func (q *Queries) CreateMatches(ctx context.Context, arg *CreateMatchesParams) (pgtype.UUID, error) {
@@ -93,6 +101,7 @@ func (q *Queries) CreateMatches(ctx context.Context, arg *CreateMatchesParams) (
 		arg.MatchTime,
 		arg.HomeTeamID,
 		arg.AwayTeamID,
+		arg.CreatedBy,
 	)
 	var id pgtype.UUID
 	err := row.Scan(&id)
@@ -101,9 +110,9 @@ func (q *Queries) CreateMatches(ctx context.Context, arg *CreateMatchesParams) (
 
 const createPlayerTeam = `-- name: CreatePlayerTeam :one
 INSERT INTO players (
-  team_id, name, height_cm, weight_kg, position, jersey_number
+  team_id, name, height_cm, weight_kg, position, jersey_number, created_by
 ) VALUES (
-  $1, $2, $3, $4, $5, $6
+  $1, $2, $3, $4, $5, $6, $7
 ) RETURNING id
 `
 
@@ -114,6 +123,7 @@ type CreatePlayerTeamParams struct {
 	WeightKg     pgtype.Numeric `json:"weight_kg"`
 	Position     PlayerPosition `json:"position"`
 	JerseyNumber int16          `json:"jersey_number"`
+	CreatedBy    pgtype.Text    `json:"created_by"`
 }
 
 func (q *Queries) CreatePlayerTeam(ctx context.Context, arg *CreatePlayerTeamParams) (pgtype.UUID, error) {
@@ -124,6 +134,7 @@ func (q *Queries) CreatePlayerTeam(ctx context.Context, arg *CreatePlayerTeamPar
 		arg.WeightKg,
 		arg.Position,
 		arg.JerseyNumber,
+		arg.CreatedBy,
 	)
 	var id pgtype.UUID
 	err := row.Scan(&id)
@@ -132,9 +143,9 @@ func (q *Queries) CreatePlayerTeam(ctx context.Context, arg *CreatePlayerTeamPar
 
 const createTeam = `-- name: CreateTeam :one
 INSERT INTO teams (
-  name, logo, founded_year, address, city
+  name, logo, founded_year, address, city, created_by
 ) VALUES (
-  $1, $2, $3, $4, $5
+  $1, $2, $3, $4, $5, $6
 ) RETURNING id
 `
 
@@ -144,6 +155,7 @@ type CreateTeamParams struct {
 	FoundedYear pgtype.Text `json:"founded_year"`
 	Address     string      `json:"address"`
 	City        string      `json:"city"`
+	CreatedBy   pgtype.Text `json:"created_by"`
 }
 
 func (q *Queries) CreateTeam(ctx context.Context, arg *CreateTeamParams) (pgtype.UUID, error) {
@@ -153,6 +165,7 @@ func (q *Queries) CreateTeam(ctx context.Context, arg *CreateTeamParams) (pgtype
 		arg.FoundedYear,
 		arg.Address,
 		arg.City,
+		arg.CreatedBy,
 	)
 	var id pgtype.UUID
 	err := row.Scan(&id)
@@ -163,45 +176,63 @@ const deleteGoals = `-- name: DeleteGoals :one
 UPDATE goals
 SET
   is_deleted = true,
-  deleted_at = now()
-WHERE id = $1 AND is_deleted = false
+  deleted_at = now(),
+  deleted_by = $1
+WHERE id = $2 AND is_deleted = false
 RETURNING id
 `
 
-func (q *Queries) DeleteGoals(ctx context.Context, id pgtype.UUID) (pgtype.UUID, error) {
-	row := q.db.QueryRow(ctx, deleteGoals, id)
-	var id_2 pgtype.UUID
-	err := row.Scan(&id_2)
-	return id_2, err
+type DeleteGoalsParams struct {
+	DeletedBy pgtype.Text `json:"deleted_by"`
+	ID        pgtype.UUID `json:"id"`
+}
+
+func (q *Queries) DeleteGoals(ctx context.Context, arg *DeleteGoalsParams) (pgtype.UUID, error) {
+	row := q.db.QueryRow(ctx, deleteGoals, arg.DeletedBy, arg.ID)
+	var id pgtype.UUID
+	err := row.Scan(&id)
+	return id, err
 }
 
 const deleteMatch = `-- name: DeleteMatch :one
 UPDATE matches
 SET 
   is_deleted = true,
-  deleted_at = now()
-WHERE id = $1 AND is_deleted = false
+  deleted_at = now(),
+  deleted_by = $1
+WHERE id = $2 AND is_deleted = false
 RETURNING id
 `
 
-func (q *Queries) DeleteMatch(ctx context.Context, id pgtype.UUID) (pgtype.UUID, error) {
-	row := q.db.QueryRow(ctx, deleteMatch, id)
-	var id_2 pgtype.UUID
-	err := row.Scan(&id_2)
-	return id_2, err
+type DeleteMatchParams struct {
+	DeletedBy pgtype.Text `json:"deleted_by"`
+	ID        pgtype.UUID `json:"id"`
+}
+
+func (q *Queries) DeleteMatch(ctx context.Context, arg *DeleteMatchParams) (pgtype.UUID, error) {
+	row := q.db.QueryRow(ctx, deleteMatch, arg.DeletedBy, arg.ID)
+	var id pgtype.UUID
+	err := row.Scan(&id)
+	return id, err
 }
 
 const deletePlayer = `-- name: DeletePlayer :one
 UPDATE players
 SET 
   is_deleted = true,
-  deleted_at = now()
-WHERE id = $1 AND is_deleted = false
-RETURNING id, team_id, name, height_cm, weight_kg, position, jersey_number, created_at, updated_at, is_deleted, deleted_at
+  deleted_at = now(),
+  deleted_by = $1
+WHERE id = $2 AND is_deleted = false
+RETURNING id, team_id, name, height_cm, weight_kg, position, jersey_number, created_at, updated_at, is_deleted, deleted_at, created_by, updated_by, deleted_by
 `
 
-func (q *Queries) DeletePlayer(ctx context.Context, id pgtype.UUID) (*Player, error) {
-	row := q.db.QueryRow(ctx, deletePlayer, id)
+type DeletePlayerParams struct {
+	DeletedBy pgtype.Text `json:"deleted_by"`
+	ID        pgtype.UUID `json:"id"`
+}
+
+func (q *Queries) DeletePlayer(ctx context.Context, arg *DeletePlayerParams) (*Player, error) {
+	row := q.db.QueryRow(ctx, deletePlayer, arg.DeletedBy, arg.ID)
 	var i Player
 	err := row.Scan(
 		&i.ID,
@@ -215,6 +246,9 @@ func (q *Queries) DeletePlayer(ctx context.Context, id pgtype.UUID) (*Player, er
 		&i.UpdatedAt,
 		&i.IsDeleted,
 		&i.DeletedAt,
+		&i.CreatedBy,
+		&i.UpdatedBy,
+		&i.DeletedBy,
 	)
 	return &i, err
 }
@@ -611,7 +645,7 @@ func (q *Queries) GetPlayerDetail(ctx context.Context, id pgtype.UUID) (*GetPlay
 }
 
 const getTeamDetail = `-- name: GetTeamDetail :one
-SELECT id, name, logo, founded_year, address, city, created_at, updated_at, is_deleted, deleted_at FROM teams
+SELECT id, name, logo, founded_year, address, city, created_at, updated_at, is_deleted, deleted_at, created_by, updated_by, deleted_by FROM teams
 WHERE id = $1 AND is_deleted = false
 `
 
@@ -629,6 +663,9 @@ func (q *Queries) GetTeamDetail(ctx context.Context, id pgtype.UUID) (*Team, err
 		&i.UpdatedAt,
 		&i.IsDeleted,
 		&i.DeletedAt,
+		&i.CreatedBy,
+		&i.UpdatedBy,
+		&i.DeletedBy,
 	)
 	return &i, err
 }
@@ -637,7 +674,7 @@ const matchFullTime = `-- name: MatchFullTime :one
 WITH match_info AS (
   SELECT ma.id as match_id, home_team_id, away_team_id
   FROM matches ma
-  WHERE ma.id = $1
+  WHERE ma.id = $2
 ),
 goals_count AS (
   SELECT
@@ -650,7 +687,7 @@ goals_count AS (
   GROUP BY m.match_id
 )
 INSERT INTO match_results(
-  id, status, home_score, away_score
+  id, status, home_score, away_score, created_by
 )
 SELECT
   gc.match_id as id,
@@ -660,7 +697,8 @@ SELECT
       ELSE 0                            
   END AS status,
   gc.home_score,
-  gc.away_score
+  gc.away_score,
+  $1
 FROM goals_count gc
 ON CONFLICT (id) 
 DO UPDATE SET 
@@ -670,8 +708,13 @@ DO UPDATE SET
 RETURNING id
 `
 
-func (q *Queries) MatchFullTime(ctx context.Context, matchID pgtype.UUID) (pgtype.UUID, error) {
-	row := q.db.QueryRow(ctx, matchFullTime, matchID)
+type MatchFullTimeParams struct {
+	CreatedBy pgtype.Text `json:"created_by"`
+	MatchID   pgtype.UUID `json:"match_id"`
+}
+
+func (q *Queries) MatchFullTime(ctx context.Context, arg *MatchFullTimeParams) (pgtype.UUID, error) {
+	row := q.db.QueryRow(ctx, matchFullTime, arg.CreatedBy, arg.MatchID)
 	var id pgtype.UUID
 	err := row.Scan(&id)
 	return id, err
@@ -682,19 +725,26 @@ UPDATE matches
 SET 
   match_date = $1,
   match_time = $2,
-  updated_at = now()
-WHERE id = $3 AND is_deleted = false
+  updated_at = now(),
+  updated_by = $3
+WHERE id = $4 AND is_deleted = false
 RETURNING id
 `
 
 type RescheduleMatchParams struct {
 	MatchDate pgtype.Date `json:"match_date"`
 	MatchTime pgtype.Time `json:"match_time"`
+	UpdatedBy pgtype.Text `json:"updated_by"`
 	ID        pgtype.UUID `json:"id"`
 }
 
 func (q *Queries) RescheduleMatch(ctx context.Context, arg *RescheduleMatchParams) (pgtype.UUID, error) {
-	row := q.db.QueryRow(ctx, rescheduleMatch, arg.MatchDate, arg.MatchTime, arg.ID)
+	row := q.db.QueryRow(ctx, rescheduleMatch,
+		arg.MatchDate,
+		arg.MatchTime,
+		arg.UpdatedBy,
+		arg.ID,
+	)
 	var id pgtype.UUID
 	err := row.Scan(&id)
 	return id, err
@@ -703,16 +753,22 @@ func (q *Queries) RescheduleMatch(ctx context.Context, arg *RescheduleMatchParam
 const softDeleteTeams = `-- name: SoftDeleteTeams :one
 UPDATE teams
 SET is_deleted = true,
-  deleted_at = now()
-WHERE id = $1 AND is_deleted = false
+  deleted_at = now(),
+  deleted_by = $1
+WHERE id = $2 AND is_deleted = false
 RETURNING id
 `
 
-func (q *Queries) SoftDeleteTeams(ctx context.Context, id pgtype.UUID) (pgtype.UUID, error) {
-	row := q.db.QueryRow(ctx, softDeleteTeams, id)
-	var id_2 pgtype.UUID
-	err := row.Scan(&id_2)
-	return id_2, err
+type SoftDeleteTeamsParams struct {
+	DeletedBy pgtype.Text `json:"deleted_by"`
+	ID        pgtype.UUID `json:"id"`
+}
+
+func (q *Queries) SoftDeleteTeams(ctx context.Context, arg *SoftDeleteTeamsParams) (pgtype.UUID, error) {
+	row := q.db.QueryRow(ctx, softDeleteTeams, arg.DeletedBy, arg.ID)
+	var id pgtype.UUID
+	err := row.Scan(&id)
+	return id, err
 }
 
 const updatePlayers = `-- name: UpdatePlayers :one
@@ -724,9 +780,10 @@ SET
   weight_kg = COALESCE($4, weight_kg),
   position = COALESCE($5, position),
   jersey_number = COALESCE($6, jersey_number),
-  updated_at = now()
-WHERE id = $7 AND is_deleted = false
-RETURNING id, team_id, name, height_cm, weight_kg, position, jersey_number, created_at, updated_at, is_deleted, deleted_at
+  updated_at = now(),
+  updated_by = $7
+WHERE id = $8 AND is_deleted = false
+RETURNING id, team_id, name, height_cm, weight_kg, position, jersey_number, created_at, updated_at, is_deleted, deleted_at, created_by, updated_by, deleted_by
 `
 
 type UpdatePlayersParams struct {
@@ -736,6 +793,7 @@ type UpdatePlayersParams struct {
 	WeightKg     pgtype.Numeric     `json:"weight_kg"`
 	Position     NullPlayerPosition `json:"position"`
 	JerseyNumber pgtype.Int2        `json:"jersey_number"`
+	UpdatedBy    pgtype.Text        `json:"updated_by"`
 	ID           pgtype.UUID        `json:"id"`
 }
 
@@ -747,6 +805,7 @@ func (q *Queries) UpdatePlayers(ctx context.Context, arg *UpdatePlayersParams) (
 		arg.WeightKg,
 		arg.Position,
 		arg.JerseyNumber,
+		arg.UpdatedBy,
 		arg.ID,
 	)
 	var i Player
@@ -762,6 +821,9 @@ func (q *Queries) UpdatePlayers(ctx context.Context, arg *UpdatePlayersParams) (
 		&i.UpdatedAt,
 		&i.IsDeleted,
 		&i.DeletedAt,
+		&i.CreatedBy,
+		&i.UpdatedBy,
+		&i.DeletedBy,
 	)
 	return &i, err
 }
@@ -774,9 +836,10 @@ SET
   founded_year = COALESCE($3, founded_year),
   address = COALESCE($4, address),
   city = COALESCE($5, city),
-  updated_at = now()
-WHERE id = $6 AND is_deleted = false
-RETURNING id, name, logo, founded_year, address, city, created_at, updated_at, is_deleted, deleted_at
+  updated_at = now(),
+  updated_by = $6
+WHERE id = $7 AND is_deleted = false
+RETURNING id, name, logo, founded_year, address, city, created_at, updated_at, is_deleted, deleted_at, created_by, updated_by, deleted_by
 `
 
 type UpdateTeamsParams struct {
@@ -785,6 +848,7 @@ type UpdateTeamsParams struct {
 	FoundedYear pgtype.Text `json:"founded_year"`
 	Address     pgtype.Text `json:"address"`
 	City        pgtype.Text `json:"city"`
+	UpdatedBy   pgtype.Text `json:"updated_by"`
 	ID          pgtype.UUID `json:"id"`
 }
 
@@ -795,6 +859,7 @@ func (q *Queries) UpdateTeams(ctx context.Context, arg *UpdateTeamsParams) (*Tea
 		arg.FoundedYear,
 		arg.Address,
 		arg.City,
+		arg.UpdatedBy,
 		arg.ID,
 	)
 	var i Team
@@ -809,6 +874,9 @@ func (q *Queries) UpdateTeams(ctx context.Context, arg *UpdateTeamsParams) (*Tea
 		&i.UpdatedAt,
 		&i.IsDeleted,
 		&i.DeletedAt,
+		&i.CreatedBy,
+		&i.UpdatedBy,
+		&i.DeletedBy,
 	)
 	return &i, err
 }

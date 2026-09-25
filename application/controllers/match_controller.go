@@ -47,6 +47,7 @@ func NewMatchController(
 //	@Param			request	body		dto.CreateMatchRequest	true	"Create match body request"
 //	@Success		201		{object}	api.WebResponse[dto.CreateMatchResponse]
 //	@Failure		400		{object}	api.WebResponse[any]
+//	@Failure		401		{object}	api.WebResponse[any]
 //	@Failure		500		{object}	api.WebResponse[any]
 //	@Router			/api/v1/matches [post]
 func (c *matchController) CreateMatch(g *gin.Context) api.WebResponse[*dto.CreateMatchResponse] {
@@ -141,6 +142,7 @@ func (c *matchController) GetListMatches(g *gin.Context) api.WebResponse[[]dto.G
 //	@Param			request	body		dto.RescheduleMatchRequest	true	"Reschedule match request"
 //	@Success		202		{object}	api.WebResponse[any]
 //	@Failure		400		{object}	api.WebResponse[any]
+//	@Failure		401		{object}	api.WebResponse[any]
 //	@Failure		500		{object}	api.WebResponse[any]
 //	@Router			/api/v1/matches/{matchId}/reschedule [put]
 func (c *matchController) RescheduleMatch(g *gin.Context) api.WebResponse[any] {
@@ -200,6 +202,7 @@ func (c *matchController) RescheduleMatch(g *gin.Context) api.WebResponse[any] {
 //
 //	@Success		200		{object}	api.WebResponse[any]
 //	@Failure		400		{object}	api.WebResponse[any]
+//	@Failure		401		{object}	api.WebResponse[any]
 //	@Failure		404		{object}	api.WebResponse[any]
 //	@Failure		500		{object}	api.WebResponse[any]
 //	@Router			/api/v1/matches/{matchId} [delete]
@@ -227,6 +230,7 @@ func (c *matchController) DeleteMatch(g *gin.Context) api.WebResponse[any] {
 //	@Param			request	body		dto.MatchGoal	true	"Create match body request"
 //	@Success		201		{object}	api.WebResponse[any]
 //	@Failure		400		{object}	api.WebResponse[any]
+//	@Failure		401		{object}	api.WebResponse[any]
 //	@Failure		404		{object}	api.WebResponse[any]
 //	@Failure		500		{object}	api.WebResponse[any]
 //	@Router			/api/v1/matches/{matchId}/goals [post]
@@ -301,6 +305,7 @@ func (c *matchController) MatchGoalList(g *gin.Context) api.WebResponse[*dto.Mat
 //
 //	@Success		200		{object}	api.WebResponse[any]
 //	@Failure		400		{object}	api.WebResponse[any]
+//	@Failure		401		{object}	api.WebResponse[any]
 //	@Failure		404		{object}	api.WebResponse[any]
 //	@Failure		500		{object}	api.WebResponse[any]
 //	@Router			/api/v1/matches/{matchId}/full-time [post]

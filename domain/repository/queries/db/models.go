@@ -71,6 +71,9 @@ type Goal struct {
 	CreatedAt  pgtype.Timestamptz `json:"created_at"`
 	IsDeleted  pgtype.Bool        `json:"is_deleted"`
 	DeletedAt  pgtype.Timestamptz `json:"deleted_at"`
+	CreatedBy  pgtype.Text        `json:"created_by"`
+	UpdatedBy  pgtype.Text        `json:"updated_by"`
+	DeletedBy  pgtype.Text        `json:"deleted_by"`
 }
 
 type Match struct {
@@ -83,6 +86,9 @@ type Match struct {
 	UpdatedAt  pgtype.Timestamptz `json:"updated_at"`
 	IsDeleted  pgtype.Bool        `json:"is_deleted"`
 	DeletedAt  pgtype.Timestamptz `json:"deleted_at"`
+	CreatedBy  pgtype.Text        `json:"created_by"`
+	UpdatedBy  pgtype.Text        `json:"updated_by"`
+	DeletedBy  pgtype.Text        `json:"deleted_by"`
 }
 
 type MatchResult struct {
@@ -91,6 +97,7 @@ type MatchResult struct {
 	AwayScore int16              `json:"away_score"`
 	Status    int16              `json:"status"`
 	CreatedAt pgtype.Timestamptz `json:"created_at"`
+	CreatedBy pgtype.Text        `json:"created_by"`
 }
 
 type Player struct {
@@ -105,6 +112,9 @@ type Player struct {
 	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
 	IsDeleted    pgtype.Bool        `json:"is_deleted"`
 	DeletedAt    pgtype.Timestamptz `json:"deleted_at"`
+	CreatedBy    pgtype.Text        `json:"created_by"`
+	UpdatedBy    pgtype.Text        `json:"updated_by"`
+	DeletedBy    pgtype.Text        `json:"deleted_by"`
 }
 
 type Team struct {
@@ -118,4 +128,7 @@ type Team struct {
 	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
 	IsDeleted   pgtype.Bool        `json:"is_deleted"`
 	DeletedAt   pgtype.Timestamptz `json:"deleted_at"`
+	CreatedBy   pgtype.Text        `json:"created_by"`
+	UpdatedBy   pgtype.Text        `json:"updated_by"`
+	DeletedBy   pgtype.Text        `json:"deleted_by"`
 }

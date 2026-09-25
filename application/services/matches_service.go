@@ -53,8 +53,11 @@ func (s *matchesService) CreateMatch(ctx context.Context, request *dto.CreateMat
 		l.WithContext(ctx).Error("error when create match").Attr("error", err).Msg()
 
 		errMsg := constants.InternalServerError
-		if errors.Is(err, constants.InvalidUUIDValue) {
-			errMsg = constants.BadRequestDefault
+		switch {
+		case errors.Is(err, constants.ErrNotFoundRow):
+			errMsg = constants.NotFoundDefault
+		case errors.Is(err, constants.AdminContextNil):
+			errMsg = constants.UnauthorizedDefault
 		}
 
 		return api.ErrorResponse[*dto.CreateMatchResponse](
@@ -174,12 +177,15 @@ func (s *matchesService) RescheduleMatch(ctx context.Context, matchId string, re
 		l.WithContext(ctx).Error("error when reschedule match").Attr("error", err).Attr("match_id", matchId).Msg()
 
 		errMsg := constants.InternalServerError
-		if errors.Is(err, constants.InvalidUUIDValue) {
+		switch {
+		case errors.Is(err, constants.InvalidUUIDValue):
 			errMsg = constants.BadRequestDefault
-		}
-		if errors.Is(err, constants.ErrNotFoundRow) {
+		case errors.Is(err, constants.ErrNotFoundRow):
 			errMsg = constants.NotFoundDefault
+		case errors.Is(err, constants.AdminContextNil):
+			errMsg = constants.UnauthorizedDefault
 		}
+
 		return api.ErrorResponse[any](
 			ctx,
 			errMsg.GetMessage(),
@@ -206,12 +212,15 @@ func (s *matchesService) DeleteMatch(ctx context.Context, matchId string) api.We
 		l.WithContext(ctx).Error("error when delete match").Attr("error", err).Attr("match_id", matchId).Msg()
 
 		errMsg := constants.InternalServerError
-		if errors.Is(err, constants.InvalidUUIDValue) {
+		switch {
+		case errors.Is(err, constants.InvalidUUIDValue):
 			errMsg = constants.BadRequestDefault
-		}
-		if errors.Is(err, constants.ErrNotFoundRow) {
+		case errors.Is(err, constants.ErrNotFoundRow):
 			errMsg = constants.NotFoundDefault
+		case errors.Is(err, constants.AdminContextNil):
+			errMsg = constants.UnauthorizedDefault
 		}
+
 		return api.ErrorResponse[any](
 			ctx,
 			errMsg.GetMessage(),
@@ -243,12 +252,13 @@ func (s *matchesService) CreateMatchGoal(ctx context.Context, matchId string, re
 		l.WithContext(ctx).Error("error when create goals").Attr("error", err).Attr("match_id", matchId).Msg()
 
 		errMsg := constants.InternalServerError
-		if errors.Is(err, constants.InvalidUUIDValue) {
+		switch {
+		case errors.Is(err, constants.InvalidUUIDValue):
 			errMsg = constants.BadRequestDefault
-		}
-
-		if errors.Is(err, constants.ErrNotFoundRow) {
+		case errors.Is(err, constants.ErrNotFoundRow):
 			errMsg = constants.NotFoundDefault
+		case errors.Is(err, constants.AdminContextNil):
+			errMsg = constants.UnauthorizedDefault
 		}
 
 		return api.ErrorResponse[any](
@@ -351,12 +361,15 @@ func (s *matchesService) MatchFullTime(ctx context.Context, matchId string) api.
 		l.WithContext(ctx).Error("error when set match results").Attr("error", err).Attr("match_id", matchId).Msg()
 
 		errMsg := constants.InternalServerError
-		if errors.Is(err, constants.InvalidUUIDValue) {
+		switch {
+		case errors.Is(err, constants.InvalidUUIDValue):
 			errMsg = constants.BadRequestDefault
-		}
-		if errors.Is(err, constants.ErrNotFoundRow) {
+		case errors.Is(err, constants.ErrNotFoundRow):
 			errMsg = constants.NotFoundDefault
+		case errors.Is(err, constants.AdminContextNil):
+			errMsg = constants.UnauthorizedDefault
 		}
+
 		return api.ErrorResponse[any](
 			ctx,
 			errMsg.GetMessage(),

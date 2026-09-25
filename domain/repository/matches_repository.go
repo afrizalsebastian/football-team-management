@@ -38,6 +38,10 @@ func (r *matchesRepository) CreateMatches(ctx context.Context, match *dao.Matche
 	l := logger.LoggerNew()
 
 	l.WithContext(ctx).Debug("[CreateMatches].domain: Started").Msg()
+	admin := helper.GetContextValueClaims(ctx)
+	if admin == nil {
+		return constants.AdminContextNil
+	}
 
 	var (
 		homeId pgtype.UUID
@@ -56,6 +60,7 @@ func (r *matchesRepository) CreateMatches(ctx context.Context, match *dao.Matche
 		MatchTime:  TimeStrPtrToPgtypeTime(match.MatchTime),
 		HomeTeamID: homeId,
 		AwayTeamID: awayId,
+		CreatedBy:  StringToPgtypeText(admin.Username),
 	}
 
 	row, err := r.db.CreateMatches(ctx, params)
@@ -215,6 +220,10 @@ func (r *matchesRepository) RescheduleMatch(ctx context.Context, match *dao.Matc
 	l := logger.LoggerNew()
 
 	l.WithContext(ctx).Debug("[RescheduleMatch].domain: Started").Msg()
+	admin := helper.GetContextValueClaims(ctx)
+	if admin == nil {
+		return constants.AdminContextNil
+	}
 
 	var matchId pgtype.UUID
 	if err := matchId.Scan(match.Id); err != nil {
@@ -225,6 +234,7 @@ func (r *matchesRepository) RescheduleMatch(ctx context.Context, match *dao.Matc
 		MatchDate: DateStrPtrToPgtypeDate(match.MatchDate),
 		MatchTime: TimeStrPtrToPgtypeTime(match.MatchTime),
 		ID:        matchId,
+		UpdatedBy: StringToPgtypeText(admin.Username),
 	}); err != nil {
 		l.WithContext(ctx).
 			Error("Error when get list match").
@@ -246,13 +256,20 @@ func (r *matchesRepository) DeleteMatch(ctx context.Context, matchIdStr string) 
 	l := logger.LoggerNew()
 
 	l.WithContext(ctx).Debug("[DeleteMatch].domain: Started").Msg()
+	admin := helper.GetContextValueClaims(ctx)
+	if admin == nil {
+		return constants.AdminContextNil
+	}
 
 	var matchId pgtype.UUID
 	if err := matchId.Scan(matchIdStr); err != nil {
 		return constants.InvalidUUIDValue
 	}
 
-	if _, err := r.db.DeleteMatch(ctx, matchId); err != nil {
+	if _, err := r.db.DeleteMatch(ctx, &matchdb.DeleteMatchParams{
+		ID:        matchId,
+		DeletedBy: StringToPgtypeText(admin.Username),
+	}); err != nil {
 		l.WithContext(ctx).
 			Error("Error when delete match").
 			Attr("error", err).
@@ -273,13 +290,20 @@ func (r *matchesRepository) MatchFullTime(ctx context.Context, matchIdStr string
 	l := logger.LoggerNew()
 
 	l.WithContext(ctx).Debug("[DeleteMatch].domain: Started").Msg()
+	admin := helper.GetContextValueClaims(ctx)
+	if admin == nil {
+		return constants.AdminContextNil
+	}
 
 	var matchId pgtype.UUID
 	if err := matchId.Scan(matchIdStr); err != nil {
 		return constants.InvalidUUIDValue
 	}
 
-	if _, err := r.db.MatchFullTime(ctx, matchId); err != nil {
+	if _, err := r.db.MatchFullTime(ctx, &matchdb.MatchFullTimeParams{
+		MatchID:   matchId,
+		CreatedBy: StringToPgtypeText(admin.Username),
+	}); err != nil {
 		l.WithContext(ctx).
 			Error("Error when set match result").
 			Attr("error", err).

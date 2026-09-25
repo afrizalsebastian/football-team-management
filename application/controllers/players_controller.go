@@ -60,6 +60,7 @@ func (c *playerController) GetListPlayer(g *gin.Context) api.WebResponse[[]dto.G
 //	@Param			request		body		dto.UpdatePlayerRequest	true	"Update player request"
 //	@Success		201			{object}	api.WebResponse[dto.GetPlayerDetailResponse]
 //	@Failure		400			{object}	api.WebResponse[any]
+//	@Failure		401			{object}	api.WebResponse[any]
 //	@Failure		500			{object}	api.WebResponse[any]
 //	@Router			/api/v1/players/{playerId} [put]
 func (c *playerController) UpdatePlayer(g *gin.Context) api.WebResponse[*dto.GetPlayerDetailResponse] {
@@ -116,6 +117,7 @@ func (c *playerController) GetPlayerDetail(g *gin.Context) api.WebResponse[*dto.
 //	@Param			playerId	path		string	true	"Player Id"
 //	@Success		202			{object}	api.WebResponse[any]
 //	@Failure		400			{object}	api.WebResponse[any]
+//	@Failure		401			{object}	api.WebResponse[any]
 //	@Failure		500			{object}	api.WebResponse[any]
 //	@Router			/api/v1/players/{playerId} [delete]
 func (c *playerController) DeletePlayer(g *gin.Context) api.WebResponse[any] {

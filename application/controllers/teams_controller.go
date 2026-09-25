@@ -43,6 +43,7 @@ func NewTeamsController(teamsService services.ITeamsService) ITeamsController {
 //	@Param			request	body		dto.CreateTeamRequest	true	"Create team body request"
 //	@Success		201		{object}	api.WebResponse[dto.CreateTeamResponse]
 //	@Failure		400		{object}	api.WebResponse[any]
+//	@Failure		401		{object}	api.WebResponse[any]
 //	@Failure		500		{object}	api.WebResponse[any]
 //	@Router			/api/v1/teams [post]
 func (c *teamsController) CreateTeam(g *gin.Context) api.WebResponse[*dto.CreateTeamResponse] {
@@ -109,6 +110,7 @@ func (c *teamsController) GetListTeam(g *gin.Context) api.WebResponse[[]dto.GetL
 //
 //	@Success		202		{object}	api.WebResponse[any]
 //	@Failure		400		{object}	api.WebResponse[any]
+//	@Failure		401		{object}	api.WebResponse[any]
 //	@Failure		500		{object}	api.WebResponse[any]
 //	@Router			/api/v1/teams/{teamId} [delete]
 func (c *teamsController) SoftDeleteTeam(g *gin.Context) api.WebResponse[any] {
@@ -135,6 +137,7 @@ func (c *teamsController) SoftDeleteTeam(g *gin.Context) api.WebResponse[any] {
 //	@Param			request	body		dto.CreatePlayerTeamRequest	true	"Create team bory request"
 //	@Success		201		{object}	api.WebResponse[dto.CreatePlayerTeamResponse]
 //	@Failure		400		{object}	api.WebResponse[any]
+//	@Failure		401		{object}	api.WebResponse[any]
 //	@Failure		500		{object}	api.WebResponse[any]
 //	@Router			/api/v1/teams/{teamId}/players [post]
 func (c *teamsController) CreateTeamPlayer(g *gin.Context) api.WebResponse[*dto.CreatePlayerTeamResponse] {
@@ -230,6 +233,7 @@ func (c *teamsController) GetTeamDetail(g *gin.Context) api.WebResponse[*dto.Get
 //	@Param			request	body		dto.UpdateTeamRequest	true	"Update team request"
 //	@Success		201		{object}	api.WebResponse[dto.GetTeamDetail]
 //	@Failure		400		{object}	api.WebResponse[any]
+//	@Failure		401		{object}	api.WebResponse[any]
 //	@Failure		500		{object}	api.WebResponse[any]
 //	@Router			/api/v1/teams/{teamId} [put]
 func (c *teamsController) UpdateTeam(g *gin.Context) api.WebResponse[*dto.GetTeamDetail] {

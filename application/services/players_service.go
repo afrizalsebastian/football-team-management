@@ -123,12 +123,15 @@ func (s *playerService) UpdatePlayer(ctx context.Context, playerId string, reque
 		l.WithContext(ctx).Error("error when update player").Attr("error", err).Msg()
 
 		errMsg := constants.InternalServerError
-		if errors.Is(err, constants.InvalidUUIDValue) {
+		switch {
+		case errors.Is(err, constants.InvalidUUIDValue):
 			errMsg = constants.BadRequestDefault
-		}
-		if errors.Is(err, constants.ErrNotFoundRow) {
+		case errors.Is(err, constants.ErrNotFoundRow):
 			errMsg = constants.NotFoundDefault
+		case errors.Is(err, constants.AdminContextNil):
+			errMsg = constants.UnauthorizedDefault
 		}
+
 		return api.ErrorResponse[*dto.GetPlayerDetailResponse](
 			ctx,
 			errMsg.GetMessage(),
@@ -242,12 +245,15 @@ func (s *playerService) DeletePlayer(ctx context.Context, playerId string) api.W
 		l.WithContext(ctx).Error("error when delete player").Attr("error", err).Msg()
 
 		errMsg := constants.InternalServerError
-		if errors.Is(err, constants.InvalidUUIDValue) {
+		switch {
+		case errors.Is(err, constants.InvalidUUIDValue):
 			errMsg = constants.BadRequestDefault
-		}
-		if errors.Is(err, constants.ErrNotFoundRow) {
+		case errors.Is(err, constants.ErrNotFoundRow):
 			errMsg = constants.NotFoundDefault
+		case errors.Is(err, constants.AdminContextNil):
+			errMsg = constants.UnauthorizedDefault
 		}
+
 		return api.ErrorResponse[any](
 			ctx,
 			errMsg.GetMessage(),

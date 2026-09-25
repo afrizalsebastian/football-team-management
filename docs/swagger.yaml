@@ -614,6 +614,10 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/api.WebResponse-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.WebResponse-any'
         "500":
           description: Internal Server Error
           schema:
@@ -755,6 +759,10 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/api.WebResponse-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.WebResponse-any'
         "500":
           description: Internal Server Error
           schema:
@@ -784,6 +792,10 @@ paths:
             $ref: '#/definitions/api.WebResponse-any'
         "400":
           description: Bad Request
+          schema:
+            $ref: '#/definitions/api.WebResponse-any'
+        "401":
+          description: Unauthorized
           schema:
             $ref: '#/definitions/api.WebResponse-any'
         "404":
@@ -849,6 +861,10 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/api.WebResponse-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.WebResponse-any'
         "404":
           description: Not Found
           schema:
@@ -890,6 +906,10 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/api.WebResponse-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.WebResponse-any'
         "404":
           description: Not Found
           schema:
@@ -929,6 +949,10 @@ paths:
             $ref: '#/definitions/api.WebResponse-any'
         "400":
           description: Bad Request
+          schema:
+            $ref: '#/definitions/api.WebResponse-any'
+        "401":
+          description: Unauthorized
           schema:
             $ref: '#/definitions/api.WebResponse-any'
         "500":
@@ -979,6 +1003,10 @@ paths:
             $ref: '#/definitions/api.WebResponse-any'
         "400":
           description: Bad Request
+          schema:
+            $ref: '#/definitions/api.WebResponse-any'
+        "401":
+          description: Unauthorized
           schema:
             $ref: '#/definitions/api.WebResponse-any'
         "500":
@@ -1045,6 +1073,10 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/api.WebResponse-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.WebResponse-any'
         "500":
           description: Internal Server Error
           schema:
@@ -1095,6 +1127,10 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/api.WebResponse-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.WebResponse-any'
         "500":
           description: Internal Server Error
           schema:
@@ -1124,6 +1160,10 @@ paths:
             $ref: '#/definitions/api.WebResponse-any'
         "400":
           description: Bad Request
+          schema:
+            $ref: '#/definitions/api.WebResponse-any'
+        "401":
+          description: Unauthorized
           schema:
             $ref: '#/definitions/api.WebResponse-any'
         "500":
@@ -1190,6 +1230,10 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/api.WebResponse-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.WebResponse-any'
         "500":
           description: Internal Server Error
           schema:
@@ -1253,6 +1297,10 @@ paths:
             $ref: '#/definitions/api.WebResponse-dto_CreatePlayerTeamResponse'
         "400":
           description: Bad Request
+          schema:
+            $ref: '#/definitions/api.WebResponse-any'
+        "401":
+          description: Unauthorized
           schema:
             $ref: '#/definitions/api.WebResponse-any'
         "500":

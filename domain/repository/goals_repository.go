@@ -36,6 +36,10 @@ func (r *goalsRepository) MatchGoal(ctx context.Context, goals *dao.Goals) error
 	l := logger.LoggerNew()
 
 	l.WithContext(ctx).Debug("[MatchGoal].domain: Started").Msg()
+	admin := helper.GetContextValueClaims(ctx)
+	if admin == nil {
+		return constants.AdminContextNil
+	}
 
 	var (
 		matchId  pgtype.UUID
@@ -53,6 +57,7 @@ func (r *goalsRepository) MatchGoal(ctx context.Context, goals *dao.Goals) error
 		MatchID:    matchId,
 		PlayerID:   playerId,
 		GoalMinute: StringToPgtypeText(goals.GoalMinute),
+		CreatedBy:  StringToPgtypeText(admin.Username),
 	})
 
 	if err != nil {
@@ -139,6 +144,10 @@ func (r *goalsRepository) DeleteGoals(ctx context.Context, goalIdStr string) err
 	l := logger.LoggerNew()
 
 	l.WithContext(ctx).Debug("[DeleteGoals].domain: Started").Msg()
+	admin := helper.GetContextValueClaims(ctx)
+	if admin == nil {
+		return constants.AdminContextNil
+	}
 
 	var (
 		goalId pgtype.UUID
@@ -148,7 +157,10 @@ func (r *goalsRepository) DeleteGoals(ctx context.Context, goalIdStr string) err
 		return constants.InvalidUUIDValue
 	}
 
-	if _, err := r.db.DeleteGoals(ctx, goalId); err != nil {
+	if _, err := r.db.DeleteGoals(ctx, &goaldb.DeleteGoalsParams{
+		ID:        goalId,
+		DeletedBy: StringToPgtypeText(admin.Username),
+	}); err != nil {
 		l.WithContext(ctx).
 			Error("Error when delete goal").
 			Attr("error", err).

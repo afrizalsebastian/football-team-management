@@ -38,6 +38,10 @@ func (d *playerRepository) CreateTeamPlayer(ctx context.Context, player *dao.Pla
 	l := logger.LoggerNew()
 
 	l.WithContext(ctx).Debug("[CreateTeamPlayer].domain: Started").Msg()
+	admin := helper.GetContextValueClaims(ctx)
+	if admin == nil {
+		return constants.AdminContextNil
+	}
 
 	var (
 		teamId   pgtype.UUID
@@ -64,6 +68,7 @@ func (d *playerRepository) CreateTeamPlayer(ctx context.Context, player *dao.Pla
 		WeightKg:     weightKg,
 		Position:     playerdb.PlayerPosition(helper.GetStringPtrValue(player.Position)),
 		JerseyNumber: int16(helper.GetIntPtrValue(player.JerseyNumber)),
+		CreatedBy:    StringToPgtypeText(admin.Username),
 	}
 
 	result, err := d.db.CreatePlayerTeam(ctx, &params)
@@ -167,6 +172,10 @@ func (d *playerRepository) UpdatePartialPlayer(ctx context.Context, player *dao.
 	l := logger.LoggerNew()
 
 	l.WithContext(ctx).Debug("[UpdatePartialPlayer].domain: Started").Msg()
+	admin := helper.GetContextValueClaims(ctx)
+	if admin == nil {
+		return constants.AdminContextNil
+	}
 
 	params, err := d.createUpdatePlayerParams(player)
 	if err != nil {
@@ -174,6 +183,7 @@ func (d *playerRepository) UpdatePartialPlayer(ctx context.Context, player *dao.
 			Attr("error", err).Attr("player_id", player.Id).Msg()
 		return err
 	}
+	params.UpdatedBy = StringToPgtypeText(admin.Username)
 
 	row, err := d.db.UpdatePlayers(ctx, params)
 	if err != nil {
@@ -291,13 +301,20 @@ func (d *playerRepository) DeletePlayer(ctx context.Context, playerIdStr string)
 	l := logger.LoggerNew()
 
 	l.WithContext(ctx).Debug("[DeletePlayer].domain: Started").Msg()
+	admin := helper.GetContextValueClaims(ctx)
+	if admin == nil {
+		return constants.AdminContextNil
+	}
 
 	var playerId pgtype.UUID
 	if err := playerId.Scan(playerIdStr); err != nil {
 		return constants.InvalidUUIDValue
 	}
 
-	_, err := d.db.DeletePlayer(ctx, playerId)
+	_, err := d.db.DeletePlayer(ctx, &playerdb.DeletePlayerParams{
+		ID:        playerId,
+		DeletedBy: StringToPgtypeText(admin.Username),
+	})
 	if err != nil {
 		l.WithContext(ctx).Error("error when delete player").
 			Attr("error", err).Attr("player_id", playerIdStr).Msg()

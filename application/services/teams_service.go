@@ -52,11 +52,17 @@ func (s *teamsService) CreateTeam(ctx context.Context, request *dto.CreateTeamRe
 
 	if err := s.teamsRepository.CreateTeam(ctx, team); err != nil {
 		l.WithContext(ctx).Error("error when create team").Attr("error", err).Msg()
+
+		msgErr := constants.InternalServerError
+		if errors.Is(err, constants.AdminContextNil) {
+			msgErr = constants.UnauthorizedDefault
+		}
+
 		return api.ErrorResponse[*dto.CreateTeamResponse](
 			ctx,
-			constants.InternalServerError.GetMessage(),
-			constants.InternalServerError.GetCode(),
-			constants.InternalServerError.GetHttpCode(),
+			msgErr.GetMessage(),
+			msgErr.GetCode(),
+			msgErr.GetHttpCode(),
 			nil,
 		)
 	}
@@ -136,12 +142,15 @@ func (s *teamsService) SoftDeleteTeam(ctx context.Context, id string) api.WebRes
 		l.WithContext(ctx).Error("error when soft delete team").Attr("error", err).Msg()
 
 		errMsg := constants.InternalServerError
-		if errors.Is(err, constants.InvalidUUIDValue) {
+		switch {
+		case errors.Is(err, constants.InvalidUUIDValue):
 			errMsg = constants.BadRequestDefault
-		}
-		if errors.Is(err, constants.ErrNotFoundRow) {
+		case errors.Is(err, constants.ErrNotFoundRow):
 			errMsg = constants.NotFoundDefault
+		case errors.Is(err, constants.AdminContextNil):
+			errMsg = constants.UnauthorizedDefault
 		}
+
 		return api.ErrorResponse[any](
 			ctx,
 			errMsg.GetMessage(),
@@ -189,12 +198,13 @@ func (s *teamsService) CreatePlayerTeam(ctx context.Context, teamId string, requ
 		l.WithContext(ctx).Error("error when create team player").Attr("error", err).Msg()
 
 		errMsg := constants.InternalServerError
-		if errors.Is(err, constants.InvalidUUIDValue) || errors.Is(err, constants.InvalidFieldValue) {
+		switch {
+		case errors.Is(err, constants.InvalidUUIDValue), errors.Is(err, constants.InvalidFieldValue):
 			errMsg = constants.BadRequestDefault
-		}
-
-		if errors.Is(err, constants.DuplicateRow) {
+		case errors.Is(err, constants.DuplicateRow):
 			errMsg = constants.InvalidJerseyNumber
+		case errors.Is(err, constants.AdminContextNil):
+			errMsg = constants.UnauthorizedDefault
 		}
 
 		return api.ErrorResponse[*dto.CreatePlayerTeamResponse](
@@ -361,12 +371,15 @@ func (s *teamsService) UpdateTeamData(ctx context.Context, teamId string, reques
 			Attr("error", err).Attr("team_id", teamId).Msg()
 
 		errMsg := constants.InternalServerError
-		if errors.Is(err, constants.InvalidUUIDValue) {
+		switch {
+		case errors.Is(err, constants.InvalidUUIDValue):
 			errMsg = constants.BadRequestDefault
-		}
-		if errors.Is(err, constants.ErrNotFoundRow) {
+		case errors.Is(err, constants.ErrNotFoundRow):
 			errMsg = constants.NotFoundDefault
+		case errors.Is(err, constants.AdminContextNil):
+			errMsg = constants.UnauthorizedDefault
 		}
+
 		return api.ErrorResponse[*dto.GetTeamDetail](
 			ctx,
 			errMsg.GetMessage(),

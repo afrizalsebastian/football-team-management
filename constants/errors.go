@@ -7,4 +7,5 @@ var (
 	InvalidFieldValue = errors.New("Invalid Field Value")
 	DuplicateRow      = errors.New("Duplicate Row in DB")
 	ErrNotFoundRow    = errors.New("Not found row in DB")
+	AdminContextNil   = errors.New("Invalid admin value in context")
 )

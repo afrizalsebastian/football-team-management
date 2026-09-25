@@ -34,12 +34,15 @@ func (s *goalService) DeleteGoals(ctx context.Context, goalId string) api.WebRes
 		l.WithContext(ctx).Error("error when soft delete goal").Attr("error", err).Msg()
 
 		errMsg := constants.InternalServerError
-		if errors.Is(err, constants.InvalidUUIDValue) {
+		switch {
+		case errors.Is(err, constants.InvalidUUIDValue):
 			errMsg = constants.BadRequestDefault
-		}
-		if errors.Is(err, constants.ErrNotFoundRow) {
+		case errors.Is(err, constants.ErrNotFoundRow):
 			errMsg = constants.NotFoundDefault
+		case errors.Is(err, constants.AdminContextNil):
+			errMsg = constants.UnauthorizedDefault
 		}
+
 		return api.ErrorResponse[any](
 			ctx,
 			errMsg.GetMessage(),

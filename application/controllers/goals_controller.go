@@ -37,6 +37,7 @@ func NewGoalController(
 //
 //	@Success		202		{object}	api.WebResponse[any]
 //	@Failure		400		{object}	api.WebResponse[any]
+//	@Failure		401		{object}	api.WebResponse[any]
 //	@Failure		500		{object}	api.WebResponse[any]
 //	@Router			/api/v1/goals/{goalId} [delete]
 func (c *goalController) DeleteGoal(g *gin.Context) api.WebResponse[any] {
