@@ -48,3 +48,10 @@ dep:
 
 run: dep swag-fmt swag-init
 	go run main.go
+
+build: dep swag-fmt swag-init
+	mkdir -p bin
+	go build -o bin/app.exe main.go
+
+build-run: build
+	./bin/app.exe
