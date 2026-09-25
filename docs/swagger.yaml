@@ -618,6 +618,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/api.WebResponse-any'
+      security:
+      - BearerAuth: []
       summary: Delete goal (soft-delete)
       tags:
       - Goals
@@ -757,6 +759,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/api.WebResponse-any'
+      security:
+      - BearerAuth: []
       summary: Create Match
       tags:
       - Matches
@@ -790,6 +794,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/api.WebResponse-any'
+      security:
+      - BearerAuth: []
       summary: Delete Match
       tags:
       - Matches
@@ -851,6 +857,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/api.WebResponse-any'
+      security:
+      - BearerAuth: []
       summary: Submit matches result. Full-Time
       tags:
       - Matches
@@ -890,6 +898,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/api.WebResponse-any'
+      security:
+      - BearerAuth: []
       summary: Create Match goal
       tags:
       - Matches
@@ -925,6 +935,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/api.WebResponse-any'
+      security:
+      - BearerAuth: []
       summary: Reschedule Match
       tags:
       - Matches
@@ -973,6 +985,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/api.WebResponse-any'
+      security:
+      - BearerAuth: []
       summary: Delete Player
       tags:
       - Players
@@ -1035,6 +1049,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/api.WebResponse-any'
+      security:
+      - BearerAuth: []
       summary: Update Player Data
       tags:
       - Players
@@ -1083,6 +1099,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/api.WebResponse-any'
+      security:
+      - BearerAuth: []
       summary: Create Team
       tags:
       - Teams
@@ -1112,6 +1130,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/api.WebResponse-any'
+      security:
+      - BearerAuth: []
       summary: Delete team (soft-delete)
       tags:
       - Teams
@@ -1174,6 +1194,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/api.WebResponse-any'
+      security:
+      - BearerAuth: []
       summary: Update Team Data
       tags:
       - Teams
@@ -1237,12 +1259,14 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/api.WebResponse-any'
+      security:
+      - BearerAuth: []
       summary: Create Team Player
       tags:
       - Teams
 securityDefinitions:
   BearerAuth:
-    description: 'Please input token with format: Bearer <token>'
+    description: 'Please input token with format: Bearer __TOKEN__'
     in: header
     name: Authorization
     type: apiKey

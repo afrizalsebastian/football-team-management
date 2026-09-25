@@ -67,6 +67,11 @@ const docTemplate = `{
         },
         "/api/v1/goals/{goalId}": {
             "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Delete goal (soft-delete)",
                 "consumes": [
                     "application/json"
@@ -276,6 +281,11 @@ const docTemplate = `{
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Create a new match",
                 "consumes": [
                     "application/json"
@@ -364,6 +374,11 @@ const docTemplate = `{
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Delete Match",
                 "consumes": [
                     "application/json"
@@ -414,6 +429,11 @@ const docTemplate = `{
         },
         "/api/v1/matches/{matchId}/full-time": {
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Submit matches result. Full-Time",
                 "consumes": [
                     "application/json"
@@ -464,6 +484,11 @@ const docTemplate = `{
         },
         "/api/v1/matches/{matchId}/goals": {
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Create a new match goal",
                 "consumes": [
                     "application/json"
@@ -523,6 +548,11 @@ const docTemplate = `{
         },
         "/api/v1/matches/{matchId}/reschedule": {
             "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Reschedule match",
                 "consumes": [
                     "application/json"
@@ -647,6 +677,11 @@ const docTemplate = `{
                 }
             },
             "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Update Player Data",
                 "consumes": [
                     "application/json"
@@ -698,6 +733,11 @@ const docTemplate = `{
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Delete Player",
                 "consumes": [
                     "application/json"
@@ -769,6 +809,11 @@ const docTemplate = `{
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Create a new team",
                 "consumes": [
                     "application/json"
@@ -857,6 +902,11 @@ const docTemplate = `{
                 }
             },
             "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Update Team Data",
                 "consumes": [
                     "application/json"
@@ -908,6 +958,11 @@ const docTemplate = `{
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Delete team (soft-delete)",
                 "consumes": [
                     "application/json"
@@ -994,6 +1049,11 @@ const docTemplate = `{
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Create a new team Player",
                 "consumes": [
                     "application/json"
@@ -1889,7 +1949,7 @@ const docTemplate = `{
     },
     "securityDefinitions": {
         "BearerAuth": {
-            "description": "Please input token with format: Bearer \u003ctoken\u003e",
+            "description": "Please input token with format: Bearer __TOKEN__",
             "type": "apiKey",
             "name": "Authorization",
             "in": "header"

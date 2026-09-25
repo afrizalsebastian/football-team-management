@@ -35,7 +35,7 @@ import (
 // @securityDefinitions.apikey	BearerAuth
 // @in							header
 // @name						Authorization
-// @description				Please input token with format: Bearer <token>
+// @description				Please input token with format: Bearer __TOKEN__
 func main() {
 	l := logger.LoggerNew()
 
@@ -62,12 +62,12 @@ func main() {
 	apiV1.Use(middleware.RequestTracingMiddleware())
 	{
 		routes.SetupHelloRoutes(apiV1, httpServer)
-		routes.SetupTeamsRoutes(apiV1, httpServer)
-		routes.SetupPlayerRoutes(apiV1, httpServer)
-		routes.SetupMatchRoutes(apiV1, httpServer)
-		routes.SetupGoalRoutes(apiV1, httpServer)
+		routes.SetupTeamsRoutes(apiV1, app, httpServer)
+		routes.SetupPlayerRoutes(apiV1, app, httpServer)
+		routes.SetupMatchRoutes(apiV1, app, httpServer)
+		routes.SetupGoalRoutes(apiV1, app, httpServer)
 		routes.SetupSuperAdminRoutes(apiV1, app, httpServer)
-		routes.SetupAdminRoutes(apiV1, app, httpServer)
+		routes.SetupAdminRoutes(apiV1, httpServer)
 	}
 
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))

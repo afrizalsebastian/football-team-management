@@ -37,6 +37,9 @@ func NewTeamsController(teamsService services.ITeamsService) ITeamsController {
 //	@Tags			Teams
 //	@Accept			json
 //	@Produce		json
+//
+//	@Security		BearerAuth
+//
 //	@Param			request	body		dto.CreateTeamRequest	true	"Create team body request"
 //	@Success		201		{object}	api.WebResponse[dto.CreateTeamResponse]
 //	@Failure		400		{object}	api.WebResponse[any]
@@ -100,6 +103,8 @@ func (c *teamsController) GetListTeam(g *gin.Context) api.WebResponse[[]dto.GetL
 //	@Accept			json
 //	@Produce		json
 //
+//	@Security		BearerAuth
+//
 //	@Param			teamId	path		string	true	"Team ID"
 //
 //	@Success		202		{object}	api.WebResponse[any]
@@ -122,6 +127,8 @@ func (c *teamsController) SoftDeleteTeam(g *gin.Context) api.WebResponse[any] {
 //	@Tags			Teams
 //	@Accept			json
 //	@Produce		json
+//
+//	@Security		BearerAuth
 //
 //	@Param			teamId	path		string						true	"Team ID"
 //
@@ -216,6 +223,9 @@ func (c *teamsController) GetTeamDetail(g *gin.Context) api.WebResponse[*dto.Get
 //	@Tags			Teams
 //	@Accept			json
 //	@Produce		json
+//
+//	@Security		BearerAuth
+//
 //	@Param			teamId	path		string					true	"Team ID"
 //	@Param			request	body		dto.UpdateTeamRequest	true	"Update team request"
 //	@Success		201		{object}	api.WebResponse[dto.GetTeamDetail]

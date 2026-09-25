@@ -41,6 +41,9 @@ func NewMatchController(
 //	@Tags			Matches
 //	@Accept			json
 //	@Produce		json
+//
+//	@Security		BearerAuth
+//
 //	@Param			request	body		dto.CreateMatchRequest	true	"Create match body request"
 //	@Success		201		{object}	api.WebResponse[dto.CreateMatchResponse]
 //	@Failure		400		{object}	api.WebResponse[any]
@@ -131,6 +134,8 @@ func (c *matchController) GetListMatches(g *gin.Context) api.WebResponse[[]dto.G
 //	@Accept			json
 //	@Produce		json
 //
+//	@Security		BearerAuth
+//
 //	@Param			matchId	path		string						true	"Match ID"
 //
 //	@Param			request	body		dto.RescheduleMatchRequest	true	"Reschedule match request"
@@ -189,6 +194,8 @@ func (c *matchController) RescheduleMatch(g *gin.Context) api.WebResponse[any] {
 //	@Accept			json
 //	@Produce		json
 //
+//	@Security		BearerAuth
+//
 //	@Param			matchId	path		string	true	"Match ID"
 //
 //	@Success		200		{object}	api.WebResponse[any]
@@ -212,6 +219,8 @@ func (c *matchController) DeleteMatch(g *gin.Context) api.WebResponse[any] {
 //	@Tags			Matches
 //	@Accept			json
 //	@Produce		json
+//
+//	@Security		BearerAuth
 //
 //	@Param			matchId	path		string			true	"Match ID"
 //
@@ -285,6 +294,8 @@ func (c *matchController) MatchGoalList(g *gin.Context) api.WebResponse[*dto.Mat
 //	@Tags			Matches
 //	@Accept			json
 //	@Produce		json
+//
+//	@Security		BearerAuth
 //
 //	@Param			matchId	path		string	true	"Match ID"
 //

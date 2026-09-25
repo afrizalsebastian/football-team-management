@@ -31,6 +31,8 @@ func NewGoalController(
 //	@Accept			json
 //	@Produce		json
 //
+//	@Security		BearerAuth
+//
 //	@Param			goalId	path		string	true	"Goal ID"
 //
 //	@Success		202		{object}	api.WebResponse[any]
