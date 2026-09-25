@@ -40,9 +40,12 @@ var (
 	AcceptDefault         = registerResponseCode("Accpeted", 202000, http.StatusAccepted)
 
 	// 4XX
-	BadRequestDefault   = registerResponseCode("Bad request", 400000, http.StatusBadRequest)
-	InvalidJerseyNumber = registerResponseCode("Jersery number already used by active player", 400001, http.StatusBadRequest)
-	MatchDateInPast     = registerResponseCode("Match date in past. Use other date", 400002, http.StatusBadRequest)
+	BadRequestDefault         = registerResponseCode("Bad request", 400000, http.StatusBadRequest)
+	InvalidJerseyNumber       = registerResponseCode("Jersery number already used by active player", 400001, http.StatusBadRequest)
+	MatchDateInPast           = registerResponseCode("Match date in past. Use other date", 400002, http.StatusBadRequest)
+	InvalidUsernameOrPassword = registerResponseCode("Invalid username or password. Try again.", 400003, http.StatusBadRequest)
+
+	UnauthorizedDefault = registerResponseCode("Unauthorized", 401000, http.StatusUnauthorized)
 
 	NotFoundDefault = registerResponseCode("Not Found", 404000, http.StatusNotFound)
 	NotFoundTeam    = registerResponseCode("Not Found Team", 404001, http.StatusNotFound)

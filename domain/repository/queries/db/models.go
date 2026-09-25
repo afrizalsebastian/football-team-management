@@ -55,6 +55,14 @@ func (ns NullPlayerPosition) Value() (driver.Value, error) {
 	return string(ns.PlayerPosition), nil
 }
 
+type AdminAccount struct {
+	ID        pgtype.UUID        `json:"id"`
+	Username  string             `json:"username"`
+	Password  string             `json:"password"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+	IsDeleted pgtype.Bool        `json:"is_deleted"`
+}
+
 type Goal struct {
 	ID         pgtype.UUID        `json:"id"`
 	MatchID    pgtype.UUID        `json:"match_id"`

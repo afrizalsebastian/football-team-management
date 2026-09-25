@@ -11,21 +11,25 @@ import (
 )
 
 type HttpServer struct {
-	HelloController  controllers.IHelloController
-	TeamsController  controllers.ITeamsController
-	PlayerController controllers.IPlayersController
-	MatchController  controllers.IMatchController
-	GoalController   controllers.IGoalController
+	HelloController      controllers.IHelloController
+	TeamsController      controllers.ITeamsController
+	PlayerController     controllers.IPlayersController
+	MatchController      controllers.IMatchController
+	GoalController       controllers.IGoalController
+	SuperAdminController controllers.ISuperAdminController
+	AdminController      controllers.IAdminController
 }
 
 func NewServer(app *bootstrap.FootballManagementApp) *HttpServer {
 	di := initDI(app)
 	return &HttpServer{
-		HelloController:  di.HelloController,
-		TeamsController:  di.TeamsController,
-		PlayerController: di.PlayerController,
-		MatchController:  di.MatchController,
-		GoalController:   di.GoalController,
+		HelloController:      di.HelloController,
+		TeamsController:      di.TeamsController,
+		PlayerController:     di.PlayerController,
+		MatchController:      di.MatchController,
+		GoalController:       di.GoalController,
+		SuperAdminController: di.SuperAdminController,
+		AdminController:      di.AdminController,
 	}
 }
 
@@ -206,5 +210,32 @@ func (s *HttpServer) MatchFullTime(c *gin.Context) {
 
 	c.Request = c.Request.WithContext(ctx)
 	resp := s.MatchController.MatchFullTime(c)
+	api.WriteJSONResponse(c, resp.HttpCode, resp)
+}
+
+func (s *HttpServer) GetHelloSuperAdmin(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 30*time.Second)
+	defer cancel()
+
+	c.Request = c.Request.WithContext(ctx)
+	resp := s.SuperAdminController.GetHelloSuperAdmin(c)
+	api.WriteJSONResponse(c, resp.HttpCode, resp)
+}
+
+func (s *HttpServer) CreateAccount(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 30*time.Second)
+	defer cancel()
+
+	c.Request = c.Request.WithContext(ctx)
+	resp := s.SuperAdminController.CreateAccount(c)
+	api.WriteJSONResponse(c, resp.HttpCode, resp)
+}
+
+func (s *HttpServer) Login(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 30*time.Second)
+	defer cancel()
+
+	c.Request = c.Request.WithContext(ctx)
+	resp := s.AdminController.Login(c)
 	api.WriteJSONResponse(c, resp.HttpCode, resp)
 }

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"log"
 	"reflect"
+	"time"
 
 	"github.com/spf13/viper"
 )
@@ -15,13 +16,15 @@ var (
 )
 
 type Config struct {
-	ServerPort int    `mapstructure:"SERVER_PORT"`
-	DBUser     string `mapstructure:"DB_USER"`
-	DBPassword string `mapstructure:"DB_PASSWORD"`
-	DBHost     string `mapstructure:"DB_HOST"`
-	DBPort     string `mapstructure:"DB_PORT"`
-	DBName     string `mapstructure:"DB_NAME"`
-	JwtSecret  string `mapstructure:"JWT_SECRET"`
+	ServerPort      int           `mapstructure:"SERVER_PORT"`
+	DBUser          string        `mapstructure:"DB_USER"`
+	DBPassword      string        `mapstructure:"DB_PASSWORD"`
+	DBHost          string        `mapstructure:"DB_HOST"`
+	DBPort          string        `mapstructure:"DB_PORT"`
+	DBName          string        `mapstructure:"DB_NAME"`
+	JwtSecret       string        `mapstructure:"JWT_SECRET"`
+	JwtTTL          time.Duration `mapstructure:"JWT_TTL"`
+	SuperadminToken []string      `mapstructure:"SUPERADMIN_TOKEN"`
 }
 
 func bindEnvs(v *viper.Viper, config interface{}) {

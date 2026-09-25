@@ -22,6 +22,26 @@ func (q *Queries) CheckTeamExisits(ctx context.Context, id pgtype.UUID) (pgtype.
 	return id_2, err
 }
 
+const createAdminAccount = `-- name: CreateAdminAccount :one
+INSERT INTO admin_account (
+  username, password
+) VALUES (
+  $1, $2
+) RETURNING id
+`
+
+type CreateAdminAccountParams struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
+
+func (q *Queries) CreateAdminAccount(ctx context.Context, arg *CreateAdminAccountParams) (pgtype.UUID, error) {
+	row := q.db.QueryRow(ctx, createAdminAccount, arg.Username, arg.Password)
+	var id pgtype.UUID
+	err := row.Scan(&id)
+	return id, err
+}
+
 const createGoals = `-- name: CreateGoals :one
 INSERT INTO goals(
   match_id, player_id, goal_minute
@@ -196,6 +216,25 @@ func (q *Queries) DeletePlayer(ctx context.Context, id pgtype.UUID) (*Player, er
 		&i.IsDeleted,
 		&i.DeletedAt,
 	)
+	return &i, err
+}
+
+const getAdmingByUsername = `-- name: GetAdmingByUsername :one
+SELECT username, password, id
+FROM admin_account
+WHERE username = $1 AND is_deleted = false
+`
+
+type GetAdmingByUsernameRow struct {
+	Username string      `json:"username"`
+	Password string      `json:"password"`
+	ID       pgtype.UUID `json:"id"`
+}
+
+func (q *Queries) GetAdmingByUsername(ctx context.Context, username string) (*GetAdmingByUsernameRow, error) {
+	row := q.db.QueryRow(ctx, getAdmingByUsername, username)
+	var i GetAdmingByUsernameRow
+	err := row.Scan(&i.Username, &i.Password, &i.ID)
 	return &i, err
 }
 

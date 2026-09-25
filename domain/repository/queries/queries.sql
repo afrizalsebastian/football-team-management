@@ -256,3 +256,15 @@ DO UPDATE SET
     home_score = EXCLUDED.home_score,
     away_score = EXCLUDED.away_score
 RETURNING id;
+
+-- name: CreateAdminAccount :one
+INSERT INTO admin_account (
+  username, password
+) VALUES (
+  @username, @password
+) RETURNING id;
+
+-- name: GetAdmingByUsername :one
+SELECT username, password, id
+FROM admin_account
+WHERE username = @username AND is_deleted = false;

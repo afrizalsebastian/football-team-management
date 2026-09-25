@@ -12,6 +12,7 @@ import (
 
 type Querier interface {
 	CheckTeamExisits(ctx context.Context, id pgtype.UUID) (pgtype.UUID, error)
+	CreateAdminAccount(ctx context.Context, arg *CreateAdminAccountParams) (pgtype.UUID, error)
 	CreateGoals(ctx context.Context, arg *CreateGoalsParams) (pgtype.UUID, error)
 	CreateMatches(ctx context.Context, arg *CreateMatchesParams) (pgtype.UUID, error)
 	CreatePlayerTeam(ctx context.Context, arg *CreatePlayerTeamParams) (pgtype.UUID, error)
@@ -19,6 +20,7 @@ type Querier interface {
 	DeleteGoals(ctx context.Context, id pgtype.UUID) (pgtype.UUID, error)
 	DeleteMatch(ctx context.Context, id pgtype.UUID) (pgtype.UUID, error)
 	DeletePlayer(ctx context.Context, id pgtype.UUID) (*Player, error)
+	GetAdmingByUsername(ctx context.Context, username string) (*GetAdmingByUsernameRow, error)
 	GetListMatch(ctx context.Context, arg *GetListMatchParams) ([]*GetListMatchRow, error)
 	GetListMatchGoals(ctx context.Context, matchID pgtype.UUID) ([]*GetListMatchGoalsRow, error)
 	GetListPlayer(ctx context.Context) ([]*GetListPlayerRow, error)

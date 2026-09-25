@@ -224,6 +224,16 @@ definitions:
       message_id:
         type: string
     type: object
+  dto.CreateAdminAccount:
+    properties:
+      password:
+        type: string
+      username:
+        type: string
+    required:
+    - password
+    - username
+    type: object
   dto.CreateMatchRequest:
     properties:
       away_team_id:
@@ -446,6 +456,16 @@ definitions:
       name:
         type: string
     type: object
+  dto.LoginRequest:
+    properties:
+      password:
+        type: string
+      username:
+        type: string
+    required:
+    - password
+    - username
+    type: object
   dto.MatchGoal:
     properties:
       goal_minute:
@@ -542,6 +562,36 @@ info:
   title: API Football Team Management
   version: "1.0"
 paths:
+  /api/v1/admin:
+    post:
+      consumes:
+      - application/json
+      description: Login
+      parameters:
+      - description: login request
+        in: body
+        name: '{object}'
+        required: true
+        schema:
+          $ref: '#/definitions/dto.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.WebResponse-any'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.WebResponse-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.WebResponse-any'
+      summary: Login
+      tags:
+      - Accounts
   /api/v1/goals/{goalId}:
     delete:
       consumes:
@@ -586,6 +636,69 @@ paths:
       summary: Example API -- Hello
       tags:
       - Example
+  /api/v1/internal/admin:
+    get:
+      consumes:
+      - application/json
+      description: Example API
+      parameters:
+      - description: token
+        in: header
+        name: x-internal-token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.WebResponse-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.WebResponse-any'
+      summary: Example API -- Hello from super admin
+      tags:
+      - Example
+    post:
+      consumes:
+      - application/json
+      description: CreateAccount
+      parameters:
+      - description: token
+        in: header
+        name: x-internal-token
+        required: true
+        type: string
+      - description: create account request
+        in: body
+        name: '{object}'
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateAdminAccount'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.WebResponse-any'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.WebResponse-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.WebResponse-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.WebResponse-any'
+      summary: CreateAccount
+      tags:
+      - Accounts
   /api/v1/matches:
     get:
       consumes:

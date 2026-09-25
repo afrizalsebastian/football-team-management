@@ -8,20 +8,24 @@ import (
 )
 
 type ServerDependencies struct {
-	HelloController  controllers.IHelloController
-	TeamsController  controllers.ITeamsController
-	PlayerController controllers.IPlayersController
-	MatchController  controllers.IMatchController
-	GoalController   controllers.IGoalController
+	HelloController      controllers.IHelloController
+	TeamsController      controllers.ITeamsController
+	PlayerController     controllers.IPlayersController
+	MatchController      controllers.IMatchController
+	GoalController       controllers.IGoalController
+	SuperAdminController controllers.ISuperAdminController
+	AdminController      controllers.IAdminController
 }
 
 func initDI(app *bootstrap.FootballManagementApp) *ServerDependencies {
 	return &ServerDependencies{
-		HelloController:  setupHelloControllers(),
-		TeamsController:  setupTeamsController(app),
-		PlayerController: setupPlayerController(app),
-		MatchController:  setupMatchController(app),
-		GoalController:   setupGoalController(app),
+		HelloController:      setupHelloControllers(),
+		TeamsController:      setupTeamsController(app),
+		PlayerController:     setupPlayerController(app),
+		MatchController:      setupMatchController(app),
+		GoalController:       setupGoalController(app),
+		SuperAdminController: setupSuperAdminControllers(app),
+		AdminController:      setupAdminControllers(app),
 	}
 }
 
@@ -63,6 +67,22 @@ func setupGoalController(app *bootstrap.FootballManagementApp) controllers.IGoal
 	goalRepository := repository.NewGoalsRepository(app.DBPool)
 	service := services.NewGoalService(goalRepository)
 	ctrl := controllers.NewGoalController(service)
+
+	return ctrl
+}
+
+func setupSuperAdminControllers(app *bootstrap.FootballManagementApp) controllers.ISuperAdminController {
+	adminAccountRepository := repository.NewAdminAccountRepository(app.DBPool)
+	svc := services.NewSuperAdminService(adminAccountRepository)
+	ctrl := controllers.NewSuperAdminController(svc)
+
+	return ctrl
+}
+
+func setupAdminControllers(app *bootstrap.FootballManagementApp) controllers.IAdminController {
+	adminAccountRepository := repository.NewAdminAccountRepository(app.DBPool)
+	svc := services.NewAdminService(adminAccountRepository, app.Env.JwtSecret, app.Env.JwtTTL)
+	ctrl := controllers.NewAdminController(svc)
 
 	return ctrl
 }

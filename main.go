@@ -45,7 +45,7 @@ func main() {
 	r.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"*"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
-		AllowHeaders:     []string{"Accept", "Content-Type", "Content-Length", "Accept-Encoding", "Authorization", "X-CSRF-Token"},
+		AllowHeaders:     []string{"Accept", "Content-Type", "Content-Length", "Accept-Encoding", "Authorization", "X-CSRF-Token", "x-internal-token"},
 		ExposeHeaders:    []string{"Content-Disposition"},
 		AllowCredentials: true,
 		MaxAge:           3600,
@@ -66,6 +66,8 @@ func main() {
 		routes.SetupPlayerRoutes(apiV1, httpServer)
 		routes.SetupMatchRoutes(apiV1, httpServer)
 		routes.SetupGoalRoutes(apiV1, httpServer)
+		routes.SetupSuperAdminRoutes(apiV1, app, httpServer)
+		routes.SetupAdminRoutes(apiV1, app, httpServer)
 	}
 
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
